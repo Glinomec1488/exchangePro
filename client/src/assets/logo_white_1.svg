@@ -1,0 +1,14 @@
+<svg width="708" height="143" xmlns="http://www.w3.org/2000/svg">
+
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="402" width="582" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_14" fill="#ffffff" d="m5.981484,79.561064l0,-8.832l11.4424,0l0,5.319l3.8142,3.814l21.8812,0l4.0149,-4.014l0,-12.9485l-3.9145,-3.9145l-26.6991,0l-10.3384,-10.238l0,-18.7696l10.3384,-10.3384l30.9147,0l10.3388,10.3384l0,8.9331l-11.4429,0l0,-5.4201l-3.9145,-3.8142l-20.8775,0l-3.9145,3.8142c0,3.881067 0,7.762133 0,11.6432l3.9145,3.8142l26.6991,0l10.3388,10.3383l0,20.0749l-10.5396,10.539l-31.7177,0l-10.3383,-10.339z"/>
+  <text style="cursor: move;" stroke="null" transform="matrix(3.7992481675607768,0,0,4.205238734395911,-259.3725605548406,-250.90553074783983) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_15" y="89.961105" x="78.665164" stroke-opacity="null" stroke-width="0" fill="#ffffff">E</text>
+  <ellipse id="svg_17" cy="63.683527" cx="74.874824" stroke-opacity="null" stroke-width="null" stroke="null" fill="#ffffff"/>
+  <text stroke="null" transform="rotate(0.10217735171318054 430.81582641601693,69.61583709715609) matrix(4.758772917548729,0,0,3.98289160041967,-740.598208163118,-130.85776771905358) " xml:space="preserve" text-anchor="start" font-family="'Trebuchet MS', Gadget, sans-serif" font-size="20" id="svg_20" y="57.506474" x="187.883811" stroke-opacity="null" stroke-width="0" fill="#ffffff">SimplyEx.pro</text>
+ </g>
+</svg>

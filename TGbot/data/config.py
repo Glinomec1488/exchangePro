@@ -1,0 +1,2 @@
+BotToken = '6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w'
+admins = [1945295238]

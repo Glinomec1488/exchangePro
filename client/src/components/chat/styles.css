@@ -1,0 +1,13 @@
+.chat-container {
+    box-shadow: none;
+    border: 2px solid #9500da7a;
+}
+
+.chat-input {
+    border-top: 2px solid #9500da7a;
+    box-shadow: 0px -9px 20px -2px #9500da38;
+}
+
+.chat-bubble__content {
+    color: #fff;
+}

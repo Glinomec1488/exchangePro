@@ -1,0 +1,50 @@
+{
+  "name": "bitl",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.9.1",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.11",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.10",
+    "animate.css": "^4.1.1",
+    "dotenv": "^16.0.3",
+    "dotenv-cli": "^7.0.0",
+    "react": "^18.2.0",
+    "react-animation-on-scroll": "^5.1.0",
+    "react-dom": "^18.2.0",
+    "react-qr-code": "^2.0.11",
+    "react-redux": "^8.0.5",
+    "react-router-dom": "^6.8.0",
+    "react-scripts": "5.0.1",
+    "react-simple-chat": "^1.1.4",
+    "typescript": "^4.9.4",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start:dev": "dotenv -e .env.development.local react-scripts start",
+    "build:dev": "dotenv -e .env.development.local react-scripts build"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
