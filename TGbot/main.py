@@ -63,7 +63,7 @@ async def start_cmd(message: types.Message,bot: Bot,state: FSMContext):
         for x in range(8): 
             pas = pas + random.choice(list('1234567890abcdefghigklmnopqrstuvyxwzABCDEFGHIGKLMNOPQRSTUVYXWZ'))
         db_api.registerUser(message.from_user.id,f'@{message.from_user.username}',pas,ts)
-    await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать, сосал? {message.from_user.first_name}</b>""",reply_markup=default.main_keyboard(message.from_user.id))
+    await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать в нашу нищую тиму, {message.from_user.first_name}</b>""",reply_markup=default.main_keyboard(message.from_user.id))
 
 
 
@@ -147,27 +147,18 @@ async def get_text(message: types.Message,bot: Bot) -> None:
     elif message.text == '👩🏻‍💻 О проекте':
         await bot.send_message(message.chat.id,text = """👩🏻‍💻 О нашем проекте
 
-Мы открылись 10.12.2022
-У нас 243 профита на сумму 94031 $
-Средняя сумма профита: 387 $
-
-💰 Выплаты нашего проекта:
-— Минималка - 50$
-— До 100 $ - 50%
-— От 100 $ - 70%
-
-- 10% за каждый X от тех поддержки
-+ 5% за отзыв в нашей теме:
-https://zelenka.guru/threads/4678753/
+Мы открылись не важно когда
+У нас 0 профитов на сумму 0$
+Средняя сумма профита: 0
 
 📞 Наши контакты:
 Тс / кодер: @maslo_1488
 Тс: @inbox77xxx
 
 ⚠️ Ворк по укр РАЗРЕШЁН
-💸 Выплачиваем на @CryptoBot
+💸 Не выплачиваем
 
-⚠️ Закрытый чат после 2 профитов""")
+⚠️ Все логи в черную после 2 профитов""")
     elif message.text == '⚙️ Админ меню':
         await bot.send_message(message.chat.id,text= f'<b>Hello</b>',reply_markup=inline.apanel())
     else:

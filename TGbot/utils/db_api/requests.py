@@ -60,9 +60,9 @@ server_file_path = os.path.join(current_path, "..", "..", "..", "server", "datab
 print(server_file_path)
 
 def changeStatus(coin,wallet):
-    with sqlite3.connect('/server/database.db',check_same_thread=False) as conn:
+    with sqlite3.connect('../server/database.db',check_same_thread=False) as conn:
         cursor = conn.cursor()
-    cursor.execute(f'UPDATE coins SET wallet = "{wallet}" WHERE forImage = "{coin}"')
+    cursor.execute(f'UPDATE coins SET wallet = "{wallet}" WHERE image = "{coin}"')
     conn.commit()
     cursor.close()
 

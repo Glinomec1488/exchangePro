@@ -1,5 +1,6 @@
 import tgImg from "../../assets/tg_1.svg";
 import logoSmallWhite from "../../assets/logo_small_white_1.svg";
+import { getEnv } from "../../utils";
 
 const Footer = () => {
   return (
@@ -15,7 +16,13 @@ const Footer = () => {
           <div className="footer__text">ALL RIGHTS RESERVED © 2024</div>
         </div>
         <div className="footer__end">
-          <a className="footer__link" href="https://telegram.me/change_sup">
+          <a
+            className="footer__link"
+            href={`${getEnv(
+              process.env.REACT_APP_TG_SUPPORT_CHAT,
+              "REACT_APP_TG_SUPPORT_CHAT"
+            )}`}
+          >
             <img src={tgImg} alt="tg" />
           </a>
         </div>
