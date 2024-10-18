@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { serveUrl } from "../../../../../../../config";
 import { useAppSelector } from "../../../../../../../store/hooks";
 
+let isLoaded: boolean = false;
+
+export const setIsLoaded = (loaded: boolean) => {
+  isLoaded = loaded;
+};
+
+export const getIsLoaded = (): boolean => {
+  return isLoaded;
+};
+
 const getFixedAmount = (amount: number) => {
   if (amount.toFixed(6) === "0,000000" || amount.toFixed(6) === "0.000000")
     return "0";
@@ -54,23 +64,27 @@ const useExchangeRate = () => {
   ) => {
     if (!isChangeInput || !toCurrency.shortName || !fromCurrency.shortName)
       return;
-
     const isChange = isChangeReceiveAmount ? "True" : "false";
-    const newForm = await fetch(
-      `${serveUrl}/calculator/${noNetShrtTo}/${noNetShrtFrom}/${
-        fromCurrencyAmount || "0.01"
-      }/${toCurrencyAmount || "0.01"}/${isChange}`,
-      {
-        method: "POST",
-      }
-    ).then((res) => res.json());
+    try {
+      const newForm = await fetch(
+        `${serveUrl}/calculator/${noNetShrtTo}/${noNetShrtFrom}/${
+          fromCurrencyAmount || "0.01"
+        }/${toCurrencyAmount || "0.01"}/${isChange}`,
+        {
+          method: "POST",
+        }
+      ).then((res) => res.json());
 
-    if (isChangeReceiveAmount) {
-      setFromCurrencyAmount(getFixedAmount(newForm.amount));
-    } else {
+      /*if (isChangeReceiveAmount) {
+        setFromCurrencyAmount(getFixedAmount(newForm.amount));
+      } else {*/
       setToCurrencyAmount(getFixedAmount(newForm.amount));
+      //}
+      setIsChangeInput(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      // Optionally handle any errors if needed
     }
-    setIsChangeInput(false);
   };
 
   const getFromCurrencyRange = (currency: string) => {
@@ -83,6 +97,8 @@ const useExchangeRate = () => {
 
   useEffect(() => {
     getExchangeRate(toCurrencyAmount, fromCurrencyAmount, false);
+    console.log("pass_1488");
+    setIsLoaded(true);
   }, [toCurrencyAmount, isChangeToCurrency]);
 
   useEffect(() => {
@@ -135,7 +151,6 @@ const useExchangeRate = () => {
       setToCurrencyAmount(`${config.toCurrenycRange.from}`);
     }
   };
-
   return {
     exchangeRate: config,
     fromCurrencyAmount,

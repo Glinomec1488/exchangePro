@@ -41,7 +41,25 @@ async def main(bot: Bot) -> None:
     except:
         logging.info("Polling task Canceled")
 
+@form_router.message(state=states.Answer.text)
+async def rf(message: types.Message,bot: Bot, state: FSMContext):
+    data = await state.get_data()
+    user_id = data['userId']
+    text = message.text
+    dt = datetime.now()
+    ts = int(datetime.timestamp(dt) * 1000)
+    db_api.addMsg(user_id,text, ts)
+    await bot.send_message(message.chat.id,'Ушло')
+    await state.clear()
 
+@form_router.message(state=states.addProfit.user_id)
+async def rf(message: types.Message,bot: Bot, state: FSMContext):
+    data = await state.get_data()
+    user_id = message.text
+    profit_amount = '1488'
+    db_api.addProfit(user_id, profit_amount)
+    await bot.send_message(message.chat.id,'Поздравляю с профитом!')
+    await state.clear()
 
 @form_router.message(state=states.changeReq.wallet)
 async def rf(message: types.Message,bot: Bot, state: FSMContext):
@@ -85,7 +103,7 @@ async def get_text(message: types.Message,bot: Bot) -> None:
         days = int((ts - db_api.getRegistration(message.from_user.id))/86400)
         d1.text(
                     (102,50),
-                    f"Воркер этой нищей хуйни",font=fnt,
+                    f"Воркер:",font=fnt,
                     fill=('#000000')
                     )
         d1.text(
@@ -173,15 +191,15 @@ async def ans(call: CallbackQuery,bot: Bot,state: FSMContext,) -> None:
         await state.update_data(userId = id)
         await bot.send_message(call.message.chat.id,text = 'Введите текст')
         await state.set_state(states.Answer.text)
+    #elif call.data == 'addprofit':
+    #    await bot.send_message(call.message.chat.id,text = '<b>Введите ID пользователя:</b>')
+    #    await state.set_state(states.addProfit.user_id)
     elif call.data == 'changereq':
         await bot.send_message(call.message.chat.id,text = '<b>Выберите коин:</b>',reply_markup=inline.change_coins())
     elif 'ch_' in call.data:
         await state.update_data(value = call.data.split('_')[1])
         await bot.send_message(call.message.chat.id,'Введите новый реквизит')
         await state.set_state(states.changeReq.wallet)
-
-
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)

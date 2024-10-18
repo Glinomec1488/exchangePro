@@ -70,9 +70,9 @@ def addOrder(orderId,receiveAmount,receiveCurrency,sendAmount,sendCurrency,recei
     return
 
 
-
 def getUserId(user_id):
-    with sqlite3.connect(os.path.join("TGbot", "/var/www/obmen/TGbot/database.db"),check_same_thread=False) as conn:
+    #with sqlite3.connect(os.path.join("TGbot", "../database.db"),check_same_thread=False) as conn:
+    with sqlite3.connect("../TGbot/database.db",check_same_thread=False) as conn:
         cursor = conn.cursor()
     amount = cursor.execute(f'SELECT user_id FROM users WHERE code = "{user_id}"').fetchone()[0]
     cursor.close()

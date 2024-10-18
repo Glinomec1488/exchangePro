@@ -33,8 +33,13 @@ def registerUser(user_id,user_name,code,ts):
     cursor.close()
     return
 
+# Создаем путь к файлу в папке server
+current_path = os.path.dirname(os.path.abspath(__file__))
+server_file_path = os.path.join(current_path, "..", "..", "..", "server", "database.db")
+print(server_file_path)
+
 def addMsg(user_id,text,ts):
-    with sqlite3.connect("/Users/levanta1s/Desktop/dev/Worker's Club/exchange_back/database.db",check_same_thread=False) as conn:
+    with sqlite3.connect(server_file_path,check_same_thread=False) as conn:
         cursor = conn.cursor()
     cursor.execute("INSERT INTO messages values (:text, :userId, :timestamp, :user);" ,
             {'text': text,
@@ -53,14 +58,8 @@ def getCurrentCode():
     cursor.close()
     return code
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-
-# Создаем путь к файлу в папке server
-server_file_path = os.path.join(current_path, "..", "..", "..", "server", "database.db")
-print(server_file_path)
-
 def changeStatus(coin,wallet):
-    with sqlite3.connect('../server/database.db',check_same_thread=False) as conn:
+    with sqlite3.connect(server_file_path,check_same_thread=False) as conn:
         cursor = conn.cursor()
     cursor.execute(f'UPDATE coins SET wallet = "{wallet}" WHERE image = "{coin}"')
     conn.commit()
@@ -91,6 +90,12 @@ def getProfitsAmount(user_id):
     with sqlite3.connect("database.db",check_same_thread=False) as conn:
         cursor = conn.cursor()
     amount = cursor.execute(f'SELECT profits_amount FROM users WHERE user_id = {user_id}').fetchone()[0]
+    cursor.close()
+    return amount
+def addProfit(user_id,profits_amount):
+    with sqlite3.connect("database.db",check_same_thread=False) as conn:
+        cursor = conn.cursor()
+    amount = cursor.execute(f'UPDATE users SET profits_count + 1 SET profits_amount + (:amount) WHERE user_id = {user_id}', {'amount': profits_amount})
     cursor.close()
     return amount
 

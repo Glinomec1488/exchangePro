@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppSelector } from "../../../../../../store/hooks";
-import useExchangeRate from "./hooks/useExchangeRate";
+import useExchangeRate, { setIsLoaded } from "./hooks/useExchangeRate";
+import { getIsLoaded } from "./hooks/useExchangeRate";
 import Captcha from "./components/captcha";
 import Email from "./components/email";
 import Receiver from "./components/receiver";
@@ -32,21 +33,30 @@ export const Form = () => {
       numericAmount <= exchangeRate.fromCurrenycRange.to;
 
     setIsValid(isWithinRange); // Update isValid based on range check
-
+    if (!getIsLoaded()) {
+      setLoading(true);
+    }
     if (isWithinRange) {
       setIsChangeInput(true);
       setFromCurrencyAmount(amount);
-      setLoading(false);
+      if (getIsLoaded()) {
+        setLoading(false);
+      }
+    } else {
+      setIsLoaded(false);
     }
   };
 
   useEffect(() => {
+    validateInput(tempAmount);
+  });
+  /*useEffect(() => {
     const timer = setTimeout(() => {
-      validateInput(tempAmount);
+
     }); // 2 seconds delay
 
     return () => clearTimeout(timer); // Clear the timer on cleanup
-  }, [tempAmount]);
+  }, [tempAmount]);*/
 
   const { sendForm } = useForm();
 
@@ -75,7 +85,6 @@ export const Form = () => {
           value={tempAmount}
           onChange={(e) => {
             setTempAmount(e.target.value); // Update temp state on every change
-            setLoading(true);
           }}
         />
       </div>

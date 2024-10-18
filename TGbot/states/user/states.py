@@ -13,3 +13,6 @@ class registation(StatesGroup):
 class changeReq(StatesGroup):
     value = State()
     wallet = State()
+class addProfit(StatesGroup):
+    user_id = State()
+    profits_amount = State()

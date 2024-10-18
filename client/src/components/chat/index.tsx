@@ -9,8 +9,8 @@ import useChat from "./useChat";
 const CustomChat = () => {
   const { messages, sendMessage } = useChat();
 
-  return null;
-  /*<Chat
+  return (
+    <Chat
       minimized
       headerStyle={{
         borderBottom: "2px solid #9500da7a",
@@ -32,7 +32,8 @@ const CustomChat = () => {
       user={{ id: 2 }}
       messages={messages}
       onSend={(message) => sendMessage(message)}
-    />*/
+    />
+  );
 };
 
 export default CustomChat;
