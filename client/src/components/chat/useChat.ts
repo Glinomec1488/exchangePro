@@ -44,10 +44,11 @@ const useChat = () => {
   };
 
   const sendMessage = async (message: Message) => {
+    const messageTextEncoded = encodeURIComponent(message.text);
     const userId = localStorage.getItem("userId");
     const timestamp = new Date().getTime();
     await fetch(
-      `${serveUrl}/msgSave/${message.text}/${userId}/${timestamp}/true`,
+      `${serveUrl}/msgSave/${messageTextEncoded}/${userId}/${timestamp}/true`,
       {
         method: "POST",
       }

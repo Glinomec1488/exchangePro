@@ -3,6 +3,7 @@ import AppRouter from "./config/navigation";
 import { chechUserId, getCurrencies } from "./helpers";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { dispatchCurrencies } from "./store/slices/exchange";
+import { serveUrl } from "./config";
 
 const App = () => {
   const dispatch = useAppDispatch();

@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useAppSelector } from "../../../../../../store/hooks";
-import useExchangeRate, { setIsLoaded } from "./hooks/useExchangeRate";
-import { getIsLoaded } from "./hooks/useExchangeRate";
+import useExchangeRate from "./hooks/useExchangeRate";
 import Captcha from "./components/captcha";
 import Email from "./components/email";
 import Receiver from "./components/receiver";
 import ReferalCode from "./components/referalCode";
 import useForm from "./hooks/useForm";
+
+let isLoaded: boolean = false;
+
+export const setIsLoaded = (loaded: boolean) => {
+  isLoaded = loaded;
+};
+
+export const getIsLoaded = (): boolean => {
+  return isLoaded;
+};
 
 export const Form = () => {
   const { fromCurrency, toCurrency } = useAppSelector(
@@ -48,15 +57,9 @@ export const Form = () => {
   };
 
   useEffect(() => {
+    setLoading(true);
     validateInput(tempAmount);
   });
-  /*useEffect(() => {
-    const timer = setTimeout(() => {
-
-    }); // 2 seconds delay
-
-    return () => clearTimeout(timer); // Clear the timer on cleanup
-  }, [tempAmount]);*/
 
   const { sendForm } = useForm();
 
@@ -84,7 +87,8 @@ export const Form = () => {
           step="any"
           value={tempAmount}
           onChange={(e) => {
-            setTempAmount(e.target.value); // Update temp state on every change
+            setTempAmount(e.target.value);
+            validateInput(tempAmount);
           }}
         />
       </div>

