@@ -4,7 +4,8 @@ import os
 def create_db():
     with sqlite3.connect("database.db",check_same_thread=False) as conn:
         cursor = conn.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS coins (shortName TEXT,fullName TEXT)""")
+
+    cursor.execute("""CREATE TABLE IF NOT EXISTS coins (fullName TEXT, shortName TEXT, image TEXT, wallet TEXT)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS chat_users (id INTEGER)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS messages (text TEXT,userId INTEGER,timestamp INTEGER,user TEXT)""")
     cursor.execute("""CREATE TABLE IF NOT EXISTS categories (id INTEGER,name TEXT,thumb_url FLOAT)""")
@@ -19,11 +20,11 @@ def checkUser(user_id):
     cursor.close()
     return usr
 
-def registerUser(user_id,):
+def registerUser(user_id, ip_addr, online):
     with sqlite3.connect("database.db",check_same_thread=False) as conn:
         cursor = conn.cursor()
-    cursor.execute("INSERT INTO chat_users values (:id);" ,
-            {'id': user_id})
+    cursor.execute("INSERT INTO chat_users values (:id, :ip_addr, :online);" ,
+            {'id': user_id, 'ip_addr': ip_addr, 'online': online})
     conn.commit()
     cursor.close()
     return

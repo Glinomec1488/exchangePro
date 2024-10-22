@@ -16,12 +16,9 @@ app = Flask(__name__, static_folder="static")
 CORS(app)
 
 
-
 @app.route('/static/<svgFile>')
 def serve_content(svgFile):
     return send_file(f'static/{svgFile}', mimetype='image/svg+xml')
-
-
 
 
 @app.route('/calculator/<sendCurrencyName>/<receiveCurrencyName>/<sendAmount>/<receiveAmount>/<isChangeReceiveAmount>',methods = ['POST'])
@@ -57,25 +54,26 @@ def show_index1():
 @app.route('/user/<id>',methods = ['GET'])
 def getUser(id):
     user_ip = request.remote_addr
-    telegram_api_url = tgbotUrl
-    payload = {
-        
-        }
-    headers = {
-        'Content-Type': 'application/json'
-        }
+    online = 'true'
+    telegram_message = f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'
+    inline_keyboard = {
+        'inline_keyboard': [
+            [{'text': 'Ответить', 'callback_data': f'uans_{id}'}],
+            #[{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
+            #[{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
+        ]
+    }
 
     if str(id).isdigit():
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId, 'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]',}), headers=headers)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,}), headers=headers)
+        send_telegram_message(telegram_message, inline_keyboard)
         return jsonify(id=int(id))
     else:
         id = db_api.getId()
-        db_api.registerUser(id)
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'}), headers=headers)
+        db_api.registerUser(id, user_ip, online)
+        send_telegram_message(telegram_message, inline_keyboard)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'}), headers=headers)
         return jsonify(id=id)
-        
-
-
 
 @app.route('/transactions',methods = ['GET'])
 def transactionsList():
@@ -100,15 +98,12 @@ def orderupd(orderId):
 def confirm(orderId):
     db_api.changeStatus(orderId)
     receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status,wallet = db_api.getOrderInfo(orderId)
-    #print(referalCode)
-    telegram_api_url = tgbotUrl
-    payload = {
-        'text': f'[{orderId}]\n<b>Мамонт обозначил заявку как оплаченную</b>\n\n<b>{sendAmount} {sendCurrency} -> {round(float(receiveAmount),6)} {receiveCurrency}\n{email}\n{status}\nОжидает перевода на: {receiver}</b>',
-        'parse_mode': 'HTML',
-        }
-    headers = {
-        'Content-Type': 'application/json'
-        }
+    telegram_message = f'[{orderId}]\n Мамонт обозначил заявку как оплаченную\n\n{sendAmount} {sendCurrency} -> {round(float(receiveAmount),6)} {receiveCurrency}\n{email}\n{status}\n Ожидает перевода на: {receiver}'
+    inline_keyboard = {
+        'inline_keyboard': [
+            [{'text': 'Подтвердить', 'callback_data': f'confirm_{orderId}'}],
+        ]
+    }
     if 'e' in str(sendAmount).lower():
         sendAmount = float(sendAmount)  
         sendAmount = format(sendAmount, 'f')  
@@ -117,16 +112,12 @@ def confirm(orderId):
         receiveAmount = format(receiveAmount, 'f')  
     if str(referalCode) != 'null':
         id = db_api.getUserId(referalCode)
-        print(sendAmount)
-        print(receiveAmount)
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
+        send_telegram_message(telegram_message, inline_keyboard)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     elif str(referalCode) == 'null':
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
-    if response.status_code == 200:
-        print('Message sent successfully.')
-    else:
-        print('Failed to send message. Error:', response.text)
+        send_telegram_message(telegram_message, inline_keyboard)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     return jsonify(status = 'confirmed')
 
 @app.route('/msgSave/<text>/<userId>/<timestamp>/<user>',methods = ['POST'])
@@ -135,7 +126,8 @@ def msgSave(text,userId,timestamp,user):
     telegram_message = f'Сообщение в ТП от пользователя {userId}\n\n{text}'
     inline_keyboard = {
         'inline_keyboard': [
-            [{'text': 'Ответить', 'callback_data': f'uans_{userId}'}]
+            [{'text': 'Ответить', 'callback_data': f'uans_{userId}'}],
+            [{'text': 'Очистить чат', 'callback_data': f'rmchat_{id}'}],
         ]
     }
 

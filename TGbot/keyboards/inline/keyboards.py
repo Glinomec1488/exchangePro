@@ -8,8 +8,8 @@ from utils.db_api import requests as db_api
 
 
 def faqButtons():
-    first = InlineKeyboardButton(text = '📖  Первый мануал',url = 'https://www.youtube.com/watch?v=vibiYfM1MZc')
-    second = InlineKeyboardButton(text = '📖  Второй мануал',url = 'https://www.youtube.com/watch?v=vibiYfM1MZc')
+    first = InlineKeyboardButton(text = '📖  Первый мануал',url = 'https://telegra.ph/Manual-po-rabote-v-Workers-Club-Exchange-06-19')
+    second = InlineKeyboardButton(text = '📖  Второй мануал',url = 'https://telegra.ph/Manual-po-rabote-v-Workers-Club-Exchange-v2-06-19')
     keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
     keyboard.add(first,second)
     keyboard.adjust(1, repeat=True)
@@ -18,8 +18,18 @@ def faqButtons():
 def apanel():
     first = InlineKeyboardButton(text = 'Добавить залет',callback_data= 'addprofit')
     second = InlineKeyboardButton(text = 'Изменить реквизиты',callback_data = 'changereq')
+    third = InlineKeyboardButton(text = 'Очистить старые чаты ТП', callback_data='rmoldchats')
+    fourth = InlineKeyboardButton(text = 'Удалить воркера', callback_data='rmuser')
+    fifth = InlineKeyboardButton(text = 'Дать общий варн', callback_data='msgeveryone')
     keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
-    keyboard.add(first,second)
+    keyboard.add(first,second,third,fourth,fifth)
+    keyboard.adjust(2, repeat=True)
+    return keyboard.as_markup()
+
+def regUser():
+    first = InlineKeyboardButton(text = 'Подтвердить', callback_data='')
+    keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
+    keyboard.add(first)
     keyboard.adjust(1, repeat=True)
     return keyboard.as_markup()
 

@@ -83,6 +83,7 @@ const useExchangeRate = () => {
   };
 
   useEffect(() => {
+    setIsLoaded(false);
     getExchangeRate(toCurrencyAmount, fromCurrencyAmount, false);
   }, [fromCurrencyAmount, isChangeFromCurrency]);
 

@@ -54,13 +54,20 @@ async def rf(message: types.Message,bot: Bot, state: FSMContext):
 
 @form_router.message(state=states.addProfit.user_id)
 async def rf(message: types.Message,bot: Bot, state: FSMContext):
-    data = await state.get_data()
+    #data = await state.get_data()
+    await bot.send_message(message.chat.id,'Введите сумму в $')
+    profit_amount = message.text  #data['value']
+    await bot.send_message(message.chat.id,'Введите ID')
     user_id = message.text
-    profit_amount = '1488'
-    db_api.addProfit(user_id, profit_amount)
-    await bot.send_message(message.chat.id,'Поздравляю с профитом!')
-    await state.clear()
-
+    usr = db_api.checkUser(user_id)
+    if not usr: 
+        await bot.send_message(message.chat.id,'Такого воркера не существует')
+        await state.clear()
+    else: 
+        db_api.addProfit(user_id, profit_amount)
+        await bot.send_message(message.chat.id,'Поздравляю с профитом!')
+        await state.clear()
+        
 @form_router.message(state=states.changeReq.wallet)
 async def rf(message: types.Message,bot: Bot, state: FSMContext):
     data = await state.get_data()
@@ -69,19 +76,46 @@ async def rf(message: types.Message,bot: Bot, state: FSMContext):
     db_api.changeStatus(coin,wallet)
     await bot.send_message(message.chat.id,'Реквизит успешно изменен!')
     await state.clear()
-
-
+@form_router.message(state=states.RemoveUserForm.user_id)
+async def rmus(message: types.Message,bot: Bot, state: FSMContext):
+    user_id = message.text
+    usr = db_api.checkUser(user_id)
+    if not usr:
+        await bot.send_message(message.chat.id,text = 'Таких Дэбилов у нас нет')
+        await state.clear()
+    else:
+        db_api.removeUser(user_id)
+        await bot.send_message(message.chat.id,text = 'ЛИКВИДИРОВАН')
+        await state.clear()
+@form_router.message(state=states.msgEveryone.message)
+async def sendMessage(message: types.Message,bot: Bot,state: FSMContext):
+    allIds = db_api.getAllUsers()
+    if message.text:
+        message = message.text
+        for i in allIds:
+            await bot.send_message(i,text = f"""{message}""")
+    elif message.photo:
+        message = message.photo[-1].file_id
+        for i in allIds:
+            await bot.send_photo(i,photo = message)
+    elif message.video:
+        message = message.video.file_id
+        for i in allIds:
+            await bot.send_video(i,video = message)
+    await state.clear()
 @form_router.message(commands={"start"})
 async def start_cmd(message: types.Message,bot: Bot,state: FSMContext):
     usr = db_api.checkUser(message.from_user.id)
     if not usr:
-        pas = ''
-        dt = datetime.now()
-        ts = datetime.timestamp(dt)
-        for x in range(8): 
-            pas = pas + random.choice(list('1234567890abcdefghigklmnopqrstuvyxwzABCDEFGHIGKLMNOPQRSTUVYXWZ'))
-        db_api.registerUser(message.from_user.id,f'@{message.from_user.username}',pas,ts)
-    await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать в нашу нищую тиму, {message.from_user.first_name}</b>""",reply_markup=default.main_keyboard(message.from_user.id))
+        await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать , {message.from_user.first_name}, отпиши нашему админу. @admin</b>""") 
+        inline_keyboard = {
+            'inline_keyboard': [
+              [{'text': 'Подтвердить заявку', 'callback_data': f'register;{message.chat.id}.{message.from_user.username}'}]
+            ]
+        }
+        await bot.send_message('1945295238',text= f"""{message.from_user.first_name}, ({message.from_user.id}) ожидает подтверждения""",reply_markup=inline_keyboard)
+    else:
+        await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать в нашу нищую тиму, {message.from_user.first_name}</b>""",reply_markup=default.main_keyboard(message.from_user.id))
 
 
 
@@ -184,22 +218,57 @@ async def get_text(message: types.Message,bot: Bot) -> None:
 
 
 
+
 @form_router.callback_query(lambda c: c.data,)
-async def ans(call: CallbackQuery,bot: Bot,state: FSMContext,) -> None:
+async def ans(call: CallbackQuery,bot: Bot,state: FSMContext) -> None:
     if 'uans' in call.data:
         id = call.data.split('_')[1]
         await state.update_data(userId = id)
         await bot.send_message(call.message.chat.id,text = 'Введите текст')
         await state.set_state(states.Answer.text)
-    #elif call.data == 'addprofit':
-    #    await bot.send_message(call.message.chat.id,text = '<b>Введите ID пользователя:</b>')
-    #    await state.set_state(states.addProfit.user_id)
+    elif 'rmchat' in call.data:
+        id = call.data.split('_')[1]
+        await state.update_data(userId = id)
+        db_api.clMsg(id)
+        await bot.send_message(call.message.chat.id,text = 'гучи')
+    elif 'rmoldchats' in call.data:
+        db_api.delete_old_messages()
+        await bot.send_message(call.message.chat.id,text = 'старые чаты очищены')
+    elif 'register' in call.data:
+        filterRegPrefiix = call.data.split(';')[1]
+        id = filterRegPrefiix.split('.')[0]
+        name = filterRegPrefiix.split('.')[1]
+        usr = db_api.checkUser(id)
+        if not usr:
+            pas = ''
+            dt = datetime.now()
+            ts = datetime.timestamp(dt)
+            for x in range(8): 
+                pas = pas + random.choice(list('1234567890abcdefghigklmnopqrstuvyxwzABCDEFGHIGKLMNOPQRSTUVYXWZ'))
+            db_api.registerUser(id,f'@{name}',pas,ts)
+            await bot.send_message(call.message.chat.id,'Пользователь добавлен! Не забудьте вбить его логи в черную')
+            await bot.send_message(id,'Вы были добавлены администратором! Напишите /start')
+        else:
+            await bot.send_message(call.message.chat.id,'Уже добавлен')
+    elif call.data == 'rmuser':
+        await bot.send_message(call.message.chat.id,text = '<b>Введите ID пользователя:</b>')
+        await state.set_state(states.RemoveUserForm.user_id)
+    elif call.data == 'msgeveryone':
+        await bot.send_message(call.message.chat.id,text = 'Введите текст или киньте картинку')
+        await state.set_state(states.msgEveryone.message)
+    elif call.data == 'addprofit':
+        await bot.send_message(call.message.chat.id,text = 'В разработке')
+        #await state.set_state(states.addProfit.user_id)
     elif call.data == 'changereq':
         await bot.send_message(call.message.chat.id,text = '<b>Выберите коин:</b>',reply_markup=inline.change_coins())
+    elif 'confirm_' in call.data:
+        await state.update_data(value = call.data.split('_')[1])
+        
     elif 'ch_' in call.data:
         await state.update_data(value = call.data.split('_')[1])
         await bot.send_message(call.message.chat.id,'Введите новый реквизит')
         await state.set_state(states.changeReq.wallet)
+        
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
