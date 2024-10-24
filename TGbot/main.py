@@ -7,6 +7,7 @@ import sys
 import asyncio
 import logging
 import time
+import requests
 from aiogram.types import CallbackQuery,FSInputFile,InlineKeyboardButton,InlineQuery, InputTextMessageContent, InlineQueryResultArticle,InputMediaPhoto
 from aiogram import Bot, Dispatcher, types,Router
 from aiogram.dispatcher.fsm.context import FSMContext
@@ -40,6 +41,8 @@ async def main(bot: Bot) -> None:
         await dp.start_polling(bot,drop_pending_updates=True)
     except:
         logging.info("Polling task Canceled")
+
+
 
 @form_router.message(state=states.Answer.text)
 async def rf(message: types.Message,bot: Bot, state: FSMContext):
@@ -76,6 +79,7 @@ async def rf(message: types.Message,bot: Bot, state: FSMContext):
     db_api.changeStatus(coin,wallet)
     await bot.send_message(message.chat.id,'Реквизит успешно изменен!')
     await state.clear()
+
 @form_router.message(state=states.RemoveUserForm.user_id)
 async def rmus(message: types.Message,bot: Bot, state: FSMContext):
     user_id = message.text
@@ -262,8 +266,13 @@ async def ans(call: CallbackQuery,bot: Bot,state: FSMContext) -> None:
     elif call.data == 'changereq':
         await bot.send_message(call.message.chat.id,text = '<b>Выберите коин:</b>',reply_markup=inline.change_coins())
     elif 'confirm_' in call.data:
-        await state.update_data(value = call.data.split('_')[1])
-        
+        data = call.data.split('_')[1]
+        payload = {'transID': data}
+        response = requests.post('http://172.16.10.3:60/send-message', json=payload)
+        if response.status_code == 200:
+            print('200')
+        else:
+            print('error', response)
     elif 'ch_' in call.data:
         await state.update_data(value = call.data.split('_')[1])
         await bot.send_message(call.message.chat.id,'Введите новый реквизит')

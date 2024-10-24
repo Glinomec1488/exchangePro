@@ -86,6 +86,14 @@ def changeStatus(orderId):
     conn.commit()
     cursor.close()
 
+def changeStatusToReturned(orderId):
+    with sqlite3.connect("database.db",check_same_thread=False) as conn:
+        cursor = conn.cursor()
+    cursor.execute(f'UPDATE changes SET status = "passed" WHERE orderId = "{orderId}"')
+    conn.commit()
+    cursor.close()
+
+
 def getOrderInfo(orderId):
     with sqlite3.connect("database.db",check_same_thread=False) as conn:
         cursor = conn.cursor()

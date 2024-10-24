@@ -4,7 +4,7 @@ import { serveUrl } from "../../config";
 
 const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([
-    {
+    /*{
       id: 1,
       text: "Hello my friend!",
       createdAt: "2021-07-21 12:09:12",
@@ -19,7 +19,7 @@ const useChat = () => {
       user: {
         id: 2,
       },
-    },
+    },*/
   ]);
 
   const getHistoy = async () => {

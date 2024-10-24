@@ -20,5 +20,8 @@ class addProfit(StatesGroup):
 
 class RemoveUserForm(StatesGroup):
     user_id = State()
+
 class msgEveryone(StatesGroup):
     message = State()
+class sendRedirectCall(StatesGroup):
+    call = State()
