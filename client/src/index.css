@@ -793,6 +793,7 @@ input[type="number"]:focus {
   border-radius: 15px;
   background: #101010;
   overflow: hidden;
+  text-align: center;
 }
 
 .transaction-2::before {

@@ -21,8 +21,9 @@ def apanel():
     third = InlineKeyboardButton(text = 'Очистить старые чаты ТП', callback_data='rmoldchats')
     fourth = InlineKeyboardButton(text = 'Удалить воркера', callback_data='rmuser')
     fifth = InlineKeyboardButton(text = 'Дать общий варн', callback_data='msgeveryone')
+    sixth = InlineKeyboardButton(text = 'Вывести лист пользователей', callback_data='lsusers')
     keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
-    keyboard.add(first,second,third,fourth,fifth)
+    keyboard.add(first,second,third,fourth,fifth,sixth)
     keyboard.adjust(2, repeat=True)
     return keyboard.as_markup()
 

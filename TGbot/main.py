@@ -57,18 +57,17 @@ async def rf(message: types.Message,bot: Bot, state: FSMContext):
 
 @form_router.message(state=states.addProfit.user_id)
 async def rf(message: types.Message,bot: Bot, state: FSMContext):
-    #data = await state.get_data()
-    await bot.send_message(message.chat.id,'Введите сумму в $')
-    profit_amount = message.text  #data['value']
-    await bot.send_message(message.chat.id,'Введите ID')
-    user_id = message.text
-    usr = db_api.checkUser(user_id)
+    user_id = message.text.split(':')[0]
+    amount = message.text.split(':')[1]
+    intId = int(user_id)
+    floatAmout = float(amount)
+    usr = db_api.checkUser(intId)
     if not usr: 
         await bot.send_message(message.chat.id,'Такого воркера не существует')
         await state.clear()
     else: 
-        db_api.addProfit(user_id, profit_amount)
-        await bot.send_message(message.chat.id,'Поздравляю с профитом!')
+        db_api.addProfit(intId, floatAmout)
+        await bot.send_message(intId,f'Поздравляю с профитом!\n{amount}$')
         await state.clear()
         
 @form_router.message(state=states.changeReq.wallet)
@@ -111,22 +110,32 @@ async def sendMessage(message: types.Message,bot: Bot,state: FSMContext):
 async def start_cmd(message: types.Message,bot: Bot,state: FSMContext):
     usr = db_api.checkUser(message.from_user.id)
     if not usr:
-        await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать , {message.from_user.first_name}, отпиши нашему админу. @admin</b>""") 
-        inline_keyboard = {
-            'inline_keyboard': [
-              [{'text': 'Подтвердить заявку', 'callback_data': f'register;{message.chat.id}.{message.from_user.username}'}]
-            ]
-        }
-        await bot.send_message('1945295238',text= f"""{message.from_user.first_name}, ({message.from_user.id}) ожидает подтверждения""",reply_markup=inline_keyboard)
+        if message.from_user.id in config.admins:
+            pas = ''
+            dt = datetime.now()
+            ts = datetime.timestamp(dt)
+            for x in range(8): 
+                pas = pas + random.choice(list('1234567890abcdefghigklmnopqrstuvyxwzABCDEFGHIGKLMNOPQRSTUVYXWZ'))
+            db_api.registerUser(message.from_user.id,f'@{message.from_user.username}',pas,ts)
+            await bot.send_message(message.chat.id,text = f"🦣💪")
+        else:
+            await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать , {message.from_user.first_name}, отпиши нашему админу. @admin</b>""") 
+            inline_keyboard = {
+                'inline_keyboard': [
+                [{'text': 'Подтвердить заявку', 'callback_data': f'register;{message.chat.id}.{message.from_user.username}'}]
+                ]
+            }
+            for i in config.admins:
+                await bot.send_message(i,text= f"""{message.from_user.first_name}, ({message.from_user.id}) ожидает подтверждения""",reply_markup=inline_keyboard)
     else:
-        await bot.send_message(message.chat.id,text = f"""<b>Добро пожаловать в нашу нищую тиму, {message.from_user.first_name}</b>""",reply_markup=default.main_keyboard(message.from_user.id))
+        await bot.send_message(message.chat.id,text = f"""<b>Сап</b>""",reply_markup=default.main_keyboard(message.from_user.id))
 
 
 
 @form_router.message(content_types = ['text'])
 async def get_text(message: types.Message,bot: Bot) -> None:
     if message.text == '💎 Мой профиль':
-        img = Image.open("example.jpg")
+        img = Image.open("./example.jpg")
         d1 = ImageDraw.Draw(img)
         fnt = ImageFont.truetype("Roboto-Bold.ttf", 50)
         fnt1 = ImageFont.truetype("Roboto-Bold.ttf", 40)
@@ -166,7 +175,7 @@ async def get_text(message: types.Message,bot: Bot) -> None:
                     )
         d1.text(
                     (102,390),
-                    f'@glinomecWorkBot',font=fnt5,
+                    f'@MSKOBNAL2006',font=fnt5,
                     fill=('#000000')
                     )
         img.save('abc.jpeg')
@@ -186,12 +195,12 @@ async def get_text(message: types.Message,bot: Bot) -> None:
         await bot.send_message(message.chat.id,text = f"""<b>📖 Как работать в нашем проекте</b>
 
 <b>Ссылки на наши обменники:</b>
-— https://bromo.com
+— https://bestexc.pro
 
 <b>Твой реферальный код:</b> <code>{code}</code>
 
 <b>Твои реферальные ссылки:</b>
-— https://bromo.com?ref={code}
+— https://bestexc.pro?ref={code}
 
 
 <b>Связки для мамонтов:</b>
@@ -211,12 +220,11 @@ async def get_text(message: types.Message,bot: Bot) -> None:
 Тс / кодер: @maslo_1488
 Тс: @inbox77xxx
 
-⚠️ Ворк по укр РАЗРЕШЁН
-💸 Не выплачиваем
+💸 Выплаты в Monero
 
 ⚠️ Все логи в черную после 2 профитов""")
     elif message.text == '⚙️ Админ меню':
-        await bot.send_message(message.chat.id,text= f'<b>Hello</b>',reply_markup=inline.apanel())
+        await bot.send_message(message.chat.id,text= f'<b>Привет 🩸</b>',reply_markup=inline.apanel())
     else:
         pass
 
@@ -261,23 +269,25 @@ async def ans(call: CallbackQuery,bot: Bot,state: FSMContext) -> None:
         await bot.send_message(call.message.chat.id,text = 'Введите текст или киньте картинку')
         await state.set_state(states.msgEveryone.message)
     elif call.data == 'addprofit':
-        await bot.send_message(call.message.chat.id,text = 'В разработке')
-        #await state.set_state(states.addProfit.user_id)
+        await bot.send_message(call.message.chat.id,'введите профит в формате telegramID:сумма$')
+        await state.set_state(states.addProfit.user_id)
     elif call.data == 'changereq':
         await bot.send_message(call.message.chat.id,text = '<b>Выберите коин:</b>',reply_markup=inline.change_coins())
     elif 'confirm_' in call.data:
         data = call.data.split('_')[1]
         payload = {'transID': data}
-        response = requests.post('http://172.16.10.3:60/send-message', json=payload)
+        response = requests.post(f'{config.serverUrl}/send-message', json=payload)
         if response.status_code == 200:
             print('200')
         else:
             print('error', response)
+    elif call.data == 'lsusers':
+        data = db_api.listUserDb()
+        await bot.send_message(call.message.chat.id,text = f'Лист пользователей:\n{data}')
     elif 'ch_' in call.data:
         await state.update_data(value = call.data.split('_')[1])
         await bot.send_message(call.message.chat.id,'Введите новый реквизит')
         await state.set_state(states.changeReq.wallet)
-        
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)

@@ -126,12 +126,16 @@ const Order = () => {
           {orderInfo?.status === "passed" && (
             <div className="transaction-3">
               <div className="transaction__status transaction__status_green">
-                ORDER CONFIRMED
+                ORDER COMPLETED
               </div>
               <div className="transaction__status-text">
-                Your order has been confirmed successfully!
+                Your order has been completed successfully!
               </div>
-              {/* Additional confirmed state UI elements can go here */}
+              {
+                <div className="transaction__status-text">
+                  the time of arrival of funds may vary
+                </div>
+              }
             </div>
           )}
           <div className="transaction__btns">

