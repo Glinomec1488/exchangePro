@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./styles.css";
 import arrow from "../../../../../../assets/drop_arrow.svg";
 import { getActiveCurrencyStyle } from "../currenciesList/helpers";
@@ -8,11 +8,12 @@ import useCurrency from "../../hooks/useCurrency";
 
 interface IProps {
   isTo: boolean;
+  text: string;
 }
 
-const CurrencyDropDown = ({ isTo }: IProps) => {
+const CurrencyDropDown = ({ isTo, text }: IProps) => {
   const [isActive, setIsActive] = useState(false);
-
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const {
     // currencies,
     setFromCurrency,
@@ -31,14 +32,33 @@ const CurrencyDropDown = ({ isTo }: IProps) => {
       setFromCurrency(shortName, fullName);
     }
   };
+  const toggleDropdown = () => {
+    if (dropdownRef.current) {
+      const element = dropdownRef.current;
+      if (isActive) {
+        // Collapse: Set height to 0
+        element.style.maxHeight = "0px";
+      } else {
+        // Expand: Set height to the content's scrollHeight
+        element.style.maxHeight = `${element.scrollHeight}px`;
+      }
 
+      setIsActive((prev) => !prev); // Toggle active state
+    }
+  };
   return (
     <div className="drop_container">
       <div
-        onClick={() => setIsActive((prev) => !prev)}
+        onClick={toggleDropdown}
+        ref={dropdownRef}
         className="exchange__block-title"
+        style={{
+          maxHeight: "0", // Start collapsed
+          overflow: "visible", // Hide content outside bounds
+          transition: "max-height 0.3s ease-in-out", // Smooth animation
+        }}
       >
-        YOU SEND
+        {text}
         <img src={arrow} alt="" />
       </div>
       <div className={isActive ? "dropdown dropdown_active" : "dropdown"}>
@@ -57,10 +77,7 @@ const CurrencyDropDown = ({ isTo }: IProps) => {
               )}`}
             >
               <img
-                src={`${getEnv(
-                  process.env.REACT_APP_SERVER_URL,
-                  "REACT_APP_SERVER_URL"
-                )}/static/${currency.imageUrlP}.svg`}
+                src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}
                 alt=""
               />
             </div>

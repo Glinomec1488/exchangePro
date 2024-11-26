@@ -2,3 +2,4 @@ flask_cors
 requests
 flask
 waitress
+flask_socketio

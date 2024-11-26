@@ -76,10 +76,10 @@ const Header = () => {
                   </a>
                 </li>
               ))}
+              <a className="header__btn" href="#exchange">
+                Exchange
+              </a>
             </ul>
-            <a className="header__btn" href="#exchange">
-              Exchange
-            </a>
           </nav>
           <div className="header__wrapper">
             {/* <div className="header__lang">

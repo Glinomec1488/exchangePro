@@ -1,0 +1,2 @@
+tgapi = '6773029189:AAFI61qZawMPfXYnIhLKM-cvKWaJxQMDF9w'
+superadmin = 1945295238

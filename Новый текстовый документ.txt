@@ -1,0 +1,2 @@
+ProxyPass /api/ http://localhost:5000/
+ProxyPassReverse /api/ http://localhost:5000/

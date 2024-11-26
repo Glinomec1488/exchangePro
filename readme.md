@@ -14,3 +14,11 @@ flask_cors
 requests
 flask
 waitress
+
+
+
+ProxyPass /api/ http://localhost:5000/
+ProxyPassReverse /api/ http://localhost:5000/
+ProxyPass /socket.io/ http://localhost:5000/socket.io/
+ProxyPassReverse /socket.io/ http://localhost:5000/socket.io/
+

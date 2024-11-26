@@ -37,10 +37,7 @@ const CurrenciesList = ({ isTo }: IProps) => {
               }
             >
               <img
-                src={`${getEnv(
-                  process.env.REACT_APP_SERVER_URL,
-                  "REACT_APP_SERVER_URL"
-                )}/static/${currency.imageUrlP}.svg`}
+                src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}
                 alt=""
               />
             </li>

@@ -60,7 +60,7 @@ const useChat = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       getHistoy();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(timer);
   });
