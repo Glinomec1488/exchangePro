@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 import os
 import random
 import sys
@@ -16,6 +15,8 @@ from aiogram.types import (
     InputTextMessageContent,
     InlineQueryResultArticle,
     InputMediaPhoto,
+    InlineKeyboardMarkup,
+    Message,
 )
 from aiogram import Bot, Dispatcher, types, Router
 from aiogram.dispatcher.fsm.context import FSMContext
@@ -27,6 +28,7 @@ from utils.db_api import requests as db_api
 from states.user import states
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+from aiogram import Router, F, Bot, Dispatcher
 
 
 db_api.createDb()
@@ -96,8 +98,27 @@ async def rmus(message: types.Message, bot: Bot, state: FSMContext):
         await bot.send_message(message.chat.id, text="Таких Дэбилов у нас нет")
         await state.clear()
     else:
+        inline_keyboard = {
+            "inline_keyboard": [
+                [
+                    {
+                        "text": "Да",
+                        "callback_data": f"banuser_{user_id}",
+                    }
+                ],
+                [
+                    {
+                        "text": "Нет",
+                    }
+                ],
+            ]
+        }
         db_api.removeUser(user_id)
-        await bot.send_message(message.chat.id, text="ЛИКВИДИРОВАН")
+        await bot.send_message(
+            message.chat.id,
+            text=f"{user_id} - ЛИКВИДИРОВАН, желаете ли отправить его в спам-лист?",
+            reply_markup=inline_keyboard,
+        )
         await state.clear()
 
 
@@ -151,7 +172,13 @@ async def start_cmd(message: types.Message, bot: Bot, state: FSMContext):
                                 "text": "Подтвердить заявку",
                                 "callback_data": f"register;{message.chat.id}.{message.from_user.username}",
                             }
-                        ]
+                        ],
+                        [
+                            {
+                                "text": "В спам",
+                                "callback_data": f"banuser_{message.chat.id}",
+                            }
+                        ],
                     ]
                 }
                 for i in config.admins:
@@ -167,7 +194,7 @@ async def start_cmd(message: types.Message, bot: Bot, state: FSMContext):
                 reply_markup=default.main_keyboard(message.from_user.id),
             )
     else:
-        print("banned nigga tried me")
+        pass
 
 
 @form_router.message(content_types=["text"])
@@ -237,19 +264,18 @@ async def get_text(message: types.Message, bot: Bot) -> None:
     elif message.text == "👩🏻‍💻 О проекте":
         await bot.send_message(
             message.chat.id,
-            text="""👩🏻‍💻 О нашем проекте
+            text=f"""👩🏻‍💻 О нашем проекте
 
 Мы открылись не важно когда
 У нас 0 профитов на сумму 0$
 Средняя сумма профита: 0
 
 📞 Наши контакты:
-Тс / кодер: @maslo_1488
-Тс: @inbox77xxx
+Тс / кодер: {config.coderUS}"
 
-💸 Выплаты в Monero
+💸 Выплаты на CryptoBot или в BTC
 
-⚠️ Все логи в черную после 2 профитов""",
+⚠️ """,
         )
     elif message.text == "⚙️ Админ меню":
         await bot.send_message(
@@ -303,17 +329,23 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             await bot.send_message(call.message.chat.id, "Уже добавлен")
     elif call.data == "rmuser":
         await bot.send_message(
-            call.message.chat.id, text="<b>Введите ID пользователя:</b>"
+            call.message.chat.id,
+            text="<b>Введите ID пользователя:</b>",
+            reply_markup=inline.back(),
         )
         await state.set_state(states.RemoveUserForm.user_id)
     elif call.data == "msgeveryone":
         await bot.send_message(
-            call.message.chat.id, text="Введите текст или киньте картинку"
+            call.message.chat.id,
+            text="Введите текст или киньте картинку",
+            reply_markup=inline.back(),
         )
         await state.set_state(states.msgEveryone.message)
     elif call.data == "addprofit":
         await bot.send_message(
-            call.message.chat.id, "введите профит в формате telegramID:сумма$"
+            call.message.chat.id,
+            "введите профит в формате telegramID:сумма$",
+            reply_markup=inline.back(),
         )
         await state.set_state(states.addProfit.user_id)
     elif call.data == "changereq":
@@ -337,8 +369,31 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         )
     elif "ch_" in call.data:
         await state.update_data(value=call.data.split("_")[1])
-        await bot.send_message(call.message.chat.id, "Введите новый реквизит")
+        await bot.send_message(
+            call.message.chat.id, "Введите новый реквизит", reply_markup=inline.back()
+        )
         await state.set_state(states.changeReq.wallet)
+    elif "banuser" in call.data:
+        user_id = call.data.split("_")[1]
+        banned = db_api.checkIfBanned(user_id)
+        if not banned:
+            db_api.ban(user_id)
+            await bot.send_message(
+                call.message.chat.id,
+                f"Пользователь {user_id} был отправлен в спам-лист",
+            )
+        else:
+            await bot.send_message(
+                call.message.chat.id,
+                f"{user_id} - Уже в бане",
+            )
+    elif "returnToPanel" in call.data:
+        await state.clear()
+        await bot.send_message(
+            call.message.chat.id,
+            text=f"<b>Привет 🩸</b>",
+            reply_markup=inline.apanel(),
+        )
 
 
 if __name__ == "__main__":

@@ -60,14 +60,29 @@ def create_db():
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS changes (orderId INTEGER, receiveAmount FLOAT, receiveCurrency TEXT, sendAmount FLOAT, sendCurrency TEXT, receiver TEXT, email TEXT, referalCode TEXT, status TEXT)"""
     )
+    cursor.close()
+
+
+def defaultCoinsCreate():
+    with sqlite3.connect("database.db", check_same_thread=False) as conn:
+        cursor = conn.cursor()
+    cursor.execute("""DELETE FROM coins""")
     cursor.executemany(
         """INSERT OR IGNORE INTO coins (fullName, shortName, image, wallet)VALUES (?, ?, ?, ?)
-""",
+ """,
         coinDB,
     )
+    conn.commit()
+    cursor.close()
+
+
+def defaultTxCreate():
+    with sqlite3.connect("database.db", check_same_thread=False) as conn:
+        cursor = conn.cursor()
+    cursor.execute("""DELETE FROM transactions""")
     cursor.executemany(
         """INSERT OR IGNORE INTO transactions (txHash, block, fromm, tos, value)VALUES (?, ?, ?, ?, ?)
-""",
+ """,
         txJumpStart,
     )
     conn.commit()
@@ -101,7 +116,6 @@ def getId():
     ids = cursor.execute(f"SELECT id FROM chat_users").fetchall()
     ids = [i[0] for i in ids]
     receiveAmount = int(ids[-1]) + 1
-    print(receiveAmount)
     cursor.close()
     return receiveAmount
 
@@ -206,7 +220,6 @@ def getOrderInfo(orderId):
     status = cursor.execute(
         f'SELECT status FROM changes WHERE orderId = "{orderId}"'
     ).fetchone()[0]
-    print(sendCurrency)
     wallet = cursor.execute(
         f'SELECT wallet FROM coins WHERE shortName = "{sendCurrency}"'
     ).fetchone()[0]
@@ -236,7 +249,7 @@ def checkOrder(user_id):
 def get_coins():
     with sqlite3.connect("database.db", check_same_thread=False) as conn:
         cursor = conn.cursor()
-    print(cursor.execute("PRAGMA table_info(coins);"))
+    cursor.execute("PRAGMA table_info(coins);")
     ids = cursor.execute(f"SELECT fullName FROM coins").fetchall()
     ids = [i[0] for i in ids]
     idd = cursor.execute(f"SELECT shortName FROM coins").fetchall()
