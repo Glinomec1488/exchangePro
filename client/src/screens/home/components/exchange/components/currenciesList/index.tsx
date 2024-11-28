@@ -2,6 +2,7 @@ import { useAppSelector } from "../../../../../../store/hooks";
 import { getEnv } from "../../../../../../utils";
 import useCurrency from "../../hooks/useCurrency";
 import { getActiveCurrencyStyle } from "./helpers";
+import { setIsLoaded } from "C:/Users/1/Videos/exchangePro-main/client/src/screens/home/components/exchange/components/form/index";
 interface IProps {
   isTo: boolean;
 }
@@ -32,9 +33,10 @@ const CurrenciesList = ({ isTo }: IProps) => {
                 fromCurrency.fullName,
                 toCurrency.fullName
               )}`}
-              onClick={() =>
-                handleSelectCurrency(currency.shortName, currency.fullName)
-              }
+              onClick={() => {
+                setIsLoaded(false);
+                handleSelectCurrency(currency.shortName, currency.fullName);
+              }}
             >
               <img
                 src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}

@@ -38,7 +38,7 @@ const useExchangeRate = () => {
     (state) => state.exchange
   );
 
-  const [fromCurrencyAmount, setFromCurrencyAmount] = useState("");
+  const [fromCurrencyAmount, setFromCurrencyAmount] = useState("1");
   const [toCurrencyAmount, setToCurrencyAmount] = useState("");
   const [isChangeInput, setIsChangeInput] = useState(true);
   const [isChangeToCurrency, setIsChangeToCurrency] = useState(false);

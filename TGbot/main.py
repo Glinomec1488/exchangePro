@@ -72,11 +72,19 @@ async def rf(message: types.Message, bot: Bot, state: FSMContext):
     floatAmout = float(amount)
     usr = db_api.checkUser(intId)
     if not usr:
-        await bot.send_message(message.chat.id, "Такого воркера не существует")
+        await bot.send_message(
+            message.chat.id, f"Воркера <code>{usr}</code> не существует"
+        )
+        await bot.send_message(
+            message.chat.id, text=f"<b>Привет 🩸</b>", reply_markup=inline.apanel()
+        )
         await state.clear()
     else:
         db_api.addProfit(intId, floatAmout)
-        await bot.send_message(intId, f"Поздравляю с профитом!\n{amount}$")
+        await bot.send_message(intId, f"{usr}, поздравляю с профитом!\n{amount}$")
+        await bot.send_message(
+            message.chat.id, text=f"<b>Привет 🩸</b>", reply_markup=inline.apanel()
+        )
         await state.clear()
 
 
@@ -86,7 +94,13 @@ async def rf(message: types.Message, bot: Bot, state: FSMContext):
     coin = data["value"]
     wallet = message.text
     db_api.changeStatus(coin, wallet)
-    await bot.send_message(message.chat.id, "Реквизит успешно изменен!")
+    await bot.send_message(
+        message.chat.id,
+        f"Реквизит <code>{coin}</code> успешно изменен на :\n<code>{wallet}</code>",
+    )
+    await bot.send_message(
+        message.chat.id, text=f"<b>Привет 🩸</b>", reply_markup=inline.apanel()
+    )
     await state.clear()
 
 
@@ -109,6 +123,7 @@ async def rmus(message: types.Message, bot: Bot, state: FSMContext):
                 [
                     {
                         "text": "Нет",
+                        "callback_data": f"returnToPanel",
                     }
                 ],
             ]
@@ -220,7 +235,7 @@ async def get_text(message: types.Message, bot: Bot) -> None:
         d1.text((102, 170), f"{days} дней в нашей команде", font=fnt2, fill=("#000000"))
         d1.text((102, 260), f"{count} профитов", font=fnt3, fill=("#000000"))
         d1.text((102, 290), f"На сумму {amount} $", font=fnt4, fill=("#000000"))
-        d1.text((102, 390), f"@glina_team_bot", font=fnt5, fill=("#000000"))
+        d1.text((102, 390), f"@Extasy_team", font=fnt5, fill=("#000000"))
         img.save("abc.jpeg")
         code = db_api.getRefCode(message.from_user.id)
         await bot.send_photo(
@@ -266,12 +281,10 @@ async def get_text(message: types.Message, bot: Bot) -> None:
             message.chat.id,
             text=f"""👩🏻‍💻 О нашем проекте
 
-Мы открылись не важно когда
-У нас 0 профитов на сумму 0$
-Средняя сумма профита: 0
+Вашингтон тоже не за один день построен
 
 📞 Наши контакты:
-Тс / кодер: {config.coderUS}"
+Тс / кодер: {config.coderUS}
 
 💸 Выплаты на CryptoBot или в BTC
 
@@ -328,30 +341,34 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         else:
             await bot.send_message(call.message.chat.id, "Уже добавлен")
     elif call.data == "rmuser":
-        await bot.send_message(
-            call.message.chat.id,
-            text="<b>Введите ID пользователя:</b>",
+        await bot.edit_message_text(
+            f"<b>Введите ID пользователя:</b>",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
             reply_markup=inline.back(),
         )
         await state.set_state(states.RemoveUserForm.user_id)
     elif call.data == "msgeveryone":
-        await bot.send_message(
-            call.message.chat.id,
-            text="Введите текст или киньте картинку",
+        await bot.edit_message_text(
+            f"Введите текст или киньте картинку",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
             reply_markup=inline.back(),
         )
         await state.set_state(states.msgEveryone.message)
     elif call.data == "addprofit":
-        await bot.send_message(
-            call.message.chat.id,
-            "введите профит в формате telegramID:сумма$",
+        await bot.edit_message_text(
+            f"введите профит в формате telegramID:сумма$",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
             reply_markup=inline.back(),
         )
         await state.set_state(states.addProfit.user_id)
     elif call.data == "changereq":
-        await bot.send_message(
-            call.message.chat.id,
+        await bot.edit_message_text(
             text="<b>Выберите коин:</b>",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
             reply_markup=inline.change_coins(),
         )
     elif "confirm_" in call.data:
@@ -364,13 +381,19 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             print("error", response)
     elif call.data == "lsusers":
         data = db_api.listUserDb()
-        await bot.send_message(
-            call.message.chat.id, text=f"Лист пользователей:\n{data}"
+        await bot.edit_message_text(
+            text=f"Лист пользователей:\n{data} ",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=inline.back(),
         )
     elif "ch_" in call.data:
         await state.update_data(value=call.data.split("_")[1])
-        await bot.send_message(
-            call.message.chat.id, "Введите новый реквизит", reply_markup=inline.back()
+        await bot.edit_message_text(
+            "Введите новый реквизит",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=inline.back(),
         )
         await state.set_state(states.changeReq.wallet)
     elif "banuser" in call.data:
@@ -378,9 +401,11 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         banned = db_api.checkIfBanned(user_id)
         if not banned:
             db_api.ban(user_id)
-            await bot.send_message(
-                call.message.chat.id,
+            await bot.edit_message_text(  # $
                 f"Пользователь {user_id} был отправлен в спам-лист",
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                reply_markup=inline.back(),
             )
         else:
             await bot.send_message(
@@ -389,9 +414,10 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             )
     elif "returnToPanel" in call.data:
         await state.clear()
-        await bot.send_message(
-            call.message.chat.id,
-            text=f"<b>Привет 🩸</b>",
+        await bot.edit_message_text(
+            f"<b>Привет 🩸</b>",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
             reply_markup=inline.apanel(),
         )
 

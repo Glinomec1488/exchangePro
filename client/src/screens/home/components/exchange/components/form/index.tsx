@@ -12,7 +12,6 @@ let isLoaded: boolean = false;
 export const setIsLoaded = (loaded: boolean) => {
   isLoaded = loaded;
 };
-
 export const getIsLoaded = (): boolean => {
   return isLoaded;
 };
