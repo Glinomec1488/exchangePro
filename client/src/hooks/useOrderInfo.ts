@@ -45,14 +45,24 @@ const useOrderInfo = () => {
 
     socket.on(`redirect_user_${orderId}`, async () => {
       try {
-        await fetch(`${serveUrl}/confirm/${orderId}/passed`, {
+        window.location.reload();
+      } catch (error: any) {
+        console.error(error.message);
+      }
+    });
+    /*socket.on(`err_redirect_user_${orderId}`, async () => {
+      try {
+        await fetch(`${serveUrl}/confirm/${orderId}/error`, {         
+        await fetch(`${serveUrl}/confirm/${orderId}/passed`, { other shit
+          method: "POST",
+        }).then((res) => res.json());
           method: "POST",
         }).then((res) => res.json());
         window.location.reload();
       } catch (error: any) {
         console.error(error.message);
       }
-    });
+    });*/
   });
 
   return {

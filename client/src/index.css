@@ -320,6 +320,7 @@ input[type="number"]:focus {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+  flex-direction: column;
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
@@ -343,6 +344,15 @@ input[type="number"]:focus {
   border-radius: 100%;
   -webkit-animation: preloaderCircle 0.5s linear infinite;
   animation: preloaderCircle 0.5s linear infinite;
+}
+
+.preload__text {
+  color: #ffffff; /* Text color */
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.1);
+  padding-top: 2%;
+  font-family: "Inter", sans-serif;
+  display: inline-block; /* Optional, ensures the padding is applied around the text */
 }
 
 @-webkit-keyframes preloaderCircle {
@@ -1354,6 +1364,10 @@ input[type="number"]:focus {
   border-radius: 25px;
 }
 
+.support__logo {
+  height: 120px;
+}
+
 .how-exchange__block-title {
   margin-top: 25px;
   color: #fff;
@@ -2281,6 +2295,26 @@ input[type="number"]:focus {
     width: 100%;
   }
 
+  .preloader__circle {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #fff;
+    border-right: 2px solid rgba(0, 0, 0, 0);
+    border-left: 2px solid rgba(0, 0, 0, 0);
+    border-radius: 100%;
+    -webkit-animation: preloaderCircle 0.5s linear infinite;
+    animation: preloaderCircle 0.5s linear infinite;
+  }
+
+  .preload__text {
+    color: #ffffff; /* Text color */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+      0 0 20px rgba(255, 255, 255, 0.1);
+    padding-top: 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+    display: inline-block; /* Optional, ensures the padding is applied around the text */
+  }
   .transaction__status-text {
     padding: 0;
   }
@@ -2357,4 +2391,22 @@ input[type="number"]:focus {
   color: #ccc; /* Light gray text */
   cursor: not-allowed; /* Not-allowed cursor */
   opacity: 0.7; /* Slightly transparent */
+}
+
+.footer__mid {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.footer__reput1 {
+  max-width: 100px;
+  max-width: 100px;
+  min-width: 100px;
+  min-height: 100px;
+}
+.footer__reput2 {
+  padding-left: 10%;
+  min-width: 200px;
+  min-height: 30px;
 }

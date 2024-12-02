@@ -1,8 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
+import { useAppSelector } from "../../store/hooks";
 import { Message } from "react-simple-chat";
 import { serveUrl } from "../../config";
+import { io } from "socket.io-client";
+import { chechUserChatBan, chechUserId } from "../../helpers";
 
 const useChat = () => {
+  const [isChatBanned, setIsChatBanned] = useState<boolean | null>(null);
+  useEffect(() => {
+    const fetchChatStatus = async () => {
+      const result = await chechUserChatBan(); // Call the async function
+      if (result == 1) {
+        setIsChatBanned(true);
+      } else {
+        setIsChatBanned(false);
+      }
+    };
+
+    fetchChatStatus();
+  }, []); // Empty dependency array ensures this runs only on mount
   const [messages, setMessages] = useState<Message[]>([
     /*{
       id: 1,
@@ -23,11 +39,9 @@ const useChat = () => {
   ]);
 
   const getHistoy = async () => {
-    const userId = localStorage.getItem("userId");
-
-    const history = await fetch(`${serveUrl}/msgHistory/${userId}`).then(
-      (res) => res.json()
-    );
+    const history = await fetch(
+      `${serveUrl}/msgHistory/${localStorage.getItem("userId")}`
+    ).then((res) => res.json());
 
     if (history.length > 0) {
       setMessages(
@@ -45,10 +59,11 @@ const useChat = () => {
 
   const sendMessage = async (message: Message) => {
     const messageTextEncoded = encodeURIComponent(message.text);
-    const userId = localStorage.getItem("userId");
     const timestamp = new Date().getTime();
     await fetch(
-      `${serveUrl}/msgSave/${messageTextEncoded}/${userId}/${timestamp}/true`,
+      `${serveUrl}/msgSave/${messageTextEncoded}/${localStorage.getItem(
+        "userId"
+      )}/${timestamp}/true`,
       {
         method: "POST",
       }
@@ -58,9 +73,19 @@ const useChat = () => {
   };
 
   useEffect(() => {
+    const socket = io(serveUrl);
+
+    socket.on(`hideChat_${localStorage.getItem("userId")}`, async () => {
+      try {
+        window.location.reload();
+      } catch (error: any) {
+        console.error(error.message);
+      }
+    });
+
     const timer = setInterval(() => {
       getHistoy();
-    }, 10000);
+    }, 50000);
 
     return () => clearInterval(timer);
   });
@@ -68,6 +93,7 @@ const useChat = () => {
   return {
     messages,
     sendMessage,
+    isChatBanned,
   };
 };
 

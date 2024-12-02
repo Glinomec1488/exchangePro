@@ -3,9 +3,7 @@ import "./styles.css";
 import arrow from "../../../../../../assets/drop_arrow.svg";
 import { getActiveCurrencyStyle } from "../currenciesList/helpers";
 import { useAppSelector } from "../../../../../../store/hooks";
-import { getEnv } from "../../../../../../utils";
 import useCurrency from "../../hooks/useCurrency";
-import { setIsLoaded } from "C:/Users/1/Videos/exchangePro-main/client/src/screens/home/components/exchange/components/form/index";
 interface IProps {
   isTo: boolean;
   text: string;
@@ -67,7 +65,6 @@ const CurrencyDropDown = ({ isTo, text }: IProps) => {
             <div
               key={currency.fullName}
               onClick={() => {
-                setIsLoaded(false);
                 handleSelectCurrency(currency.shortName, currency.fullName);
               }}
               className={`exchange__block-item exchange__block-item-send ${getActiveCurrencyStyle(

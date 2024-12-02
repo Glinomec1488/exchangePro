@@ -1,5 +1,17 @@
 import sqlite3
 import os
+from random import randint
+
+
+def random_with_N_digits(n):
+    range_start = 10 ** (n - 1)
+    range_end = (10**n) - 1
+    return randint(range_start, range_end)
+
+
+# Создаем путь к файлу в папке server
+current_path = os.path.dirname(os.path.abspath(__file__))
+tgbot_file_path = os.path.join(current_path, "..", "TGbot", "database.db")
 
 txJumpStart = [
     ("110lnzd9imbe...", "188719", "tz1NqA", "tz1DfN...", "431.23 XTZ"),
@@ -29,7 +41,7 @@ coinDB = [
     ("CARDANO", "ADA", "ADA", "wallet3"),
     ("TEZOS", "XTZ", "XTZ", "wallet3"),
     ("POLYGON (POLYGON)", "MATIC(POLYGON)", "MATIC", "wallet3"),
-    ("MONERO", "XMR", "XRP", "wallet3"),
+    ("MONERO", "XMR", "XMR", "wallet3"),
     ("DASH", "DASH", "DASH", "wallet3"),
     ("SHIBA INU (ERC20)", "SHIB(ERC20)", "SHIB", "wallet3"),
     ("DOGE", "DOGE", "DOGE", "wallet3"),
@@ -44,7 +56,9 @@ def create_db():
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS coins (fullName TEXT, shortName TEXT, image TEXT, wallet TEXT)"""
     )
-    cursor.execute("""CREATE TABLE IF NOT EXISTS chat_users (id INTEGER)""")
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS chat_users (id INTEGER, ip_addr TEXT, online TEXT, chatbanned TEXT)"""
+    )
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS messages (text TEXT,userId INTEGER,timestamp INTEGER,user TEXT)"""
     )
@@ -98,26 +112,37 @@ def checkUser(user_id):
     return usr
 
 
-def registerUser(user_id, ip_addr, online):
+def registerUser(user_id, ip_addr, online, chatbanned):
     with sqlite3.connect("database.db", check_same_thread=False) as conn:
         cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO chat_users values (:id, :ip_addr, :online);",
-        {"id": user_id, "ip_addr": ip_addr, "online": online},
+        "INSERT INTO chat_users values (:id, :ip_addr, :online, :chatbanned);",
+        {"id": user_id, "ip_addr": ip_addr, "online": online, "chatbanned": chatbanned},
     )
     conn.commit()
     cursor.close()
     return
 
 
+def checkForBan(user_id):
+    with sqlite3.connect("database.db", check_same_thread=False) as conn:
+        cursor = conn.cursor()
+    cond = cursor.execute(f"SELECT * FROM chat_users WHERE id = {user_id}").fetchone()[
+        3
+    ]
+    cursor.close()
+    return cond
+
+
 def getId():
     with sqlite3.connect("database.db", check_same_thread=False) as conn:
         cursor = conn.cursor()
     ids = cursor.execute(f"SELECT id FROM chat_users").fetchall()
-    ids = [i[0] for i in ids]
-    receiveAmount = int(ids[-1]) + 1
+    genId = random_with_N_digits(8)
+    if genId in ids:
+        cursor.execute(f"DELETE FROM messages WHERE userId = {genId}")
     cursor.close()
-    return receiveAmount
+    return genId
 
 
 def addMsg(text, userId, timestamp, user):
@@ -130,6 +155,15 @@ def addMsg(text, userId, timestamp, user):
     conn.commit()
     cursor.close()
     return
+
+
+def checkRefIfValid(refCode):
+    with sqlite3.connect(tgbot_file_path, check_same_thread=False) as conn:
+        cursor = conn.cursor()
+        refs = cursor.execute(f"SELECT code FROM users").fetchall()
+        exists = refCode in (row[0] for row in refs)
+        cursor.close()
+        return exists
 
 
 def addOrder(
@@ -181,14 +215,6 @@ def changeStatus(orderId):
     cursor.execute(
         f'UPDATE changes SET status = "confirmed" WHERE orderId = "{orderId}"'
     )
-    conn.commit()
-    cursor.close()
-
-
-def changeStatusToReturned(orderId):
-    with sqlite3.connect("database.db", check_same_thread=False) as conn:
-        cursor = conn.cursor()
-    cursor.execute(f'UPDATE changes SET status = "passed" WHERE orderId = "{orderId}"')
     conn.commit()
     cursor.close()
 

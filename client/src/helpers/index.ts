@@ -1,10 +1,8 @@
 import { ICurrency } from "../interfaces";
 import { getEnv } from "../utils";
-
 export const chechUserId = async () => {
   try {
     const userId = localStorage.getItem("userId");
-
     const url = getEnv(
       process.env.REACT_APP_SERVER_URL,
       "REACT_APP_SERVER_URL"
@@ -16,7 +14,17 @@ export const chechUserId = async () => {
     localStorage.setItem("userId", serverUserId.id || null);
   } catch (error: any) {
     console.error("chechUserId: " + error.message);
+    return null;
   }
+};
+export const chechUserChatBan = async () => {
+  const userId = localStorage.getItem("userId");
+  const url = getEnv(process.env.REACT_APP_SERVER_URL, "REACT_APP_SERVER_URL");
+  const serverUserId = await fetch(`${url}/user/${userId || "null"}`).then(
+    (res) => res.json()
+  );
+  const isChatBanned = serverUserId.chatbanned;
+  return isChatBanned;
 };
 
 export const wait = (ms: number) => {

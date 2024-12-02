@@ -21,7 +21,8 @@ const Order = () => {
           </div>
 
           {orderInfo?.status !== "passed" &&
-            orderInfo?.status !== "confirmed" && (
+            orderInfo?.status !== "confirmed" &&
+            orderInfo?.status !== "error" && (
               <div className="transaction-1">
                 <div className="transaction__block">
                   <div className="transaction__block-title">
@@ -134,6 +135,22 @@ const Order = () => {
               {
                 <div className="transaction__status-text">
                   the time of arrival of funds may vary
+                </div>
+              }
+            </div>
+          )}
+          {orderInfo?.status === "error" && (
+            <div className="transaction-3">
+              <div className="transaction__status transaction__status_red">
+                ORDER FAILED
+              </div>
+              <div className="transaction__status-text">
+                Your order has been cancelled for technical reasons!
+              </div>
+              {
+                <div className="transaction__status-text">
+                  Your funds should arrive back in 24 hours. If not, feel free
+                  to contact our support
                 </div>
               }
             </div>

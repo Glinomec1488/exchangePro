@@ -9,15 +9,15 @@ const getFixedAmount = (amount: number) => {
   return amount.toFixed(7);
 };
 const ranges: Record<string, { min: number; max: number }> = {
-  BTC: { min: 0.0001, max: 10 },
-  ETH: { min: 0.02, max: 100 },
-  BNB: { min: 0.08, max: 100 },
-  BCH: { min: 0.15, max: 100 },
+  BTC: { min: 0.0001, max: 100 },
+  ETH: { min: 0.02, max: 1000 },
+  BNB: { min: 0.08, max: 1000 },
+  BCH: { min: 0.15, max: 1000 },
   ZEC: { min: 1, max: 1488 },
-  FTM: { min: 74, max: 1009 },
+  FTM: { min: 74, max: 10090 },
   SOL: { min: 0.3, max: 1001 },
   LTC: { min: 0.77, max: 1021 },
-  TRX: { min: 293, max: 100053 },
+  TRX: { min: 293, max: 1900530 },
   ZRX: { min: 157, max: 100063 },
   XRP: { min: 92, max: 10000 },
   USDT: { min: 44, max: 106051 },
@@ -56,6 +56,7 @@ const useExchangeRate = () => {
     if (!isChangeInput || !toCurrency.shortName || !fromCurrency.shortName)
       return;
     const isChange = isChangeReceiveAmount ? "True" : "false";
+    setIsLoaded(false);
     try {
       const newForm = await fetch(
         `${serveUrl}/calculator/${noNetShrtTo}/${noNetShrtFrom}/${
@@ -76,6 +77,7 @@ const useExchangeRate = () => {
       console.error("Error fetching data:", error);
       // Optionally handle any errors if needed
     }
+    setIsLoaded(true);
   };
 
   const getFromCurrencyRange = (currency: string) => {
@@ -83,13 +85,11 @@ const useExchangeRate = () => {
   };
 
   useEffect(() => {
-    setIsLoaded(false);
     getExchangeRate(toCurrencyAmount, fromCurrencyAmount, false);
   }, [fromCurrencyAmount, isChangeFromCurrency]);
 
   useEffect(() => {
     getExchangeRate(toCurrencyAmount, fromCurrencyAmount, false);
-    setIsLoaded(true);
   }, [toCurrencyAmount, isChangeToCurrency]);
 
   useEffect(() => {

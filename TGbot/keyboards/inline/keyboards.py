@@ -7,6 +7,14 @@ from data import config
 from utils.db_api import requests as db_api
 
 
+def settings():
+    first = InlineKeyboardButton(text="Отстук ВКЛ", callback_data="")
+    keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
+    keyboard.add(first)
+    keyboard.adjust(1, repeat=False)
+    return keyboard.as_markup()
+
+
 def faqButtons():
     first = InlineKeyboardButton(
         text="📖  Первый мануал",
@@ -22,8 +30,18 @@ def faqButtons():
     return keyboard.as_markup()
 
 
-def back():
+def adminBack():
     first = InlineKeyboardButton(text="<< Назад", callback_data="returnToPanel")
+    keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
+    keyboard.add(first)
+    keyboard.adjust(1, repeat=False)
+    return keyboard.as_markup()
+
+
+def managementPanelBack():
+    first = InlineKeyboardButton(
+        text="<< Назад", callback_data="returnToManagementPanel"
+    )
     keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
     keyboard.add(first)
     keyboard.adjust(1, repeat=False)
@@ -33,16 +51,23 @@ def back():
 def apanel():
     first = InlineKeyboardButton(text="Добавить залет", callback_data="addprofit")
     second = InlineKeyboardButton(text="Изменить реквизиты", callback_data="changereq")
-    third = InlineKeyboardButton(
-        text="Очистить старые чаты ТП", callback_data="rmoldchats"
-    )
     fourth = InlineKeyboardButton(text="Удалить воркера", callback_data="rmuser")
-    fifth = InlineKeyboardButton(text="Дать общий варн", callback_data="msgeveryone")
     sixth = InlineKeyboardButton(
         text="Вывести лист пользователей", callback_data="lsusers"
     )
     keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
-    keyboard.add(first, second, third, fourth, fifth, sixth)
+    keyboard.add(first, second, fourth, sixth)
+    keyboard.adjust(2, repeat=True)
+    return keyboard.as_markup()
+
+
+def managementPanel():
+    first = InlineKeyboardButton(
+        text="Очистить старые чаты ТП", callback_data="rmoldchats"
+    )
+    second = InlineKeyboardButton(text="Дать общий варн", callback_data="msgeveryone")
+    keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
+    keyboard.add(first, second)
     keyboard.adjust(2, repeat=True)
     return keyboard.as_markup()
 

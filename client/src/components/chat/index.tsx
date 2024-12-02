@@ -7,8 +7,14 @@ import sendIcon from "../../assets/sendMessage.png";
 import useChat from "./useChat";
 
 const CustomChat = () => {
-  const { messages, sendMessage } = useChat();
+  const { messages, sendMessage, isChatBanned } = useChat();
 
+  if (isChatBanned === null) {
+    return null;
+  }
+  if (isChatBanned) {
+    return null;
+  }
   return (
     <Chat
       minimized

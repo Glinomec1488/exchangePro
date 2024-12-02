@@ -1,7 +1,8 @@
 import tgImg from "../../assets/tg_1.svg";
 import logoSmallWhite from "../../assets/logo_small_white_1.svg";
 import { getEnv } from "../../utils";
-
+import bestchange from "../../assets/bestchange-footer.svg";
+import trustPilot from "../../assets/Trust-Pilot.svg";
 const Footer = () => {
   return (
     <footer className="footer">
@@ -14,6 +15,14 @@ const Footer = () => {
             alt="logo"
           />
           <div className="footer__text">ALL RIGHTS RESERVED © 2024</div>
+        </div>
+        <div className="footer__mid">
+          <a className="footer__link" href="">
+            <img src={bestchange} className="footer__reput1" />
+          </a>
+          <a className="footer__link" href="">
+            <img src={trustPilot} className="footer__reput2" />
+          </a>
         </div>
         <div className="footer__end">
           <a

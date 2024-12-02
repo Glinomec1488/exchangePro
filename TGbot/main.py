@@ -36,6 +36,9 @@ db_api.createDb()
 form_router = Router()
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+basicPriv = "basic"
+superadminPriv = "superadmin"
+managerPriv = "manager"
 
 
 async def main(bot: Bot) -> None:
@@ -163,6 +166,7 @@ async def start_cmd(message: types.Message, bot: Bot, state: FSMContext):
         if not usr:
             if message.from_user.id in config.admins:
                 pas = ""
+
                 dt = datetime.now()
                 ts = datetime.timestamp(dt)
                 for x in range(8):
@@ -172,7 +176,11 @@ async def start_cmd(message: types.Message, bot: Bot, state: FSMContext):
                         )
                     )
                 db_api.registerUser(
-                    message.from_user.id, f"@{message.from_user.username}", pas, ts
+                    message.from_user.id,
+                    f"@{message.from_user.username}",
+                    pas,
+                    ts,
+                    superadminPriv,
                 )
                 await bot.send_message(message.chat.id, text=f"🦣💪")
             else:
@@ -290,9 +298,27 @@ async def get_text(message: types.Message, bot: Bot) -> None:
 
 ⚠️ """,
         )
-    elif message.text == "⚙️ Админ меню":
+    elif message.text == "🍷 Админ Меню":
+        print(db_api.checkPriv(message.from_user.id))
+        if db_api.checkPriv(message.from_user.id) == superadminPriv:
+            await bot.send_message(
+                message.chat.id, text=f"<b>Привет 🩸</b>", reply_markup=inline.apanel()
+            )
+        else:
+            pass
+    elif message.text == "⚙️ Панель Управления":
+        if db_api.checkPriv(message.from_user.id) == managerPriv or superadminPriv:
+            await bot.send_message(
+                message.chat.id,
+                text=f"<b>Панель Управления</b>",
+                reply_markup=inline.managementPanel(),
+            )
+        else:
+            pass
+    elif message.text == "🛠 Настройки":
         await bot.send_message(
-            message.chat.id, text=f"<b>Привет 🩸</b>", reply_markup=inline.apanel()
+            message.chat.id,
+            text=f"<b>В разработке</b>",
         )
     else:
         pass
@@ -311,10 +337,15 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         id = call.data.split("_")[1]
         await state.update_data(userId=id)
         db_api.clMsg(id)
-        await bot.send_message(call.message.chat.id, text="гучи")
+        await bot.send_message(call.message.chat.id, text=f"Чат у {id} очищен")
     elif "rmoldchats" in call.data:
         db_api.delete_old_messages()
-        await bot.send_message(call.message.chat.id, text="старые чаты очищены")
+        await bot.edit_message_text(
+            f"старые чаты очищены",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=inline.managementPanelBack(),
+        )
     elif "register" in call.data:
         filterRegPrefiix = call.data.split(";")[1]
         id = filterRegPrefiix.split(".")[0]
@@ -330,7 +361,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
                         "1234567890abcdefghigklmnopqrstuvyxwzABCDEFGHIGKLMNOPQRSTUVYXWZ"
                     )
                 )
-            db_api.registerUser(id, f"@{name}", pas, ts)
+            db_api.registerUser(id, f"@{name}", pas, ts, basicPriv)
             await bot.send_message(
                 call.message.chat.id,
                 "Пользователь добавлен! Не забудьте вбить его логи в черную",
@@ -345,7 +376,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             f"<b>Введите ID пользователя:</b>",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            reply_markup=inline.back(),
+            reply_markup=inline.adminBack(),
         )
         await state.set_state(states.RemoveUserForm.user_id)
     elif call.data == "msgeveryone":
@@ -353,7 +384,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             f"Введите текст или киньте картинку",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            reply_markup=inline.back(),
+            reply_markup=inline.managementPanelBack(),
         )
         await state.set_state(states.msgEveryone.message)
     elif call.data == "addprofit":
@@ -361,7 +392,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             f"введите профит в формате telegramID:сумма$",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            reply_markup=inline.back(),
+            reply_markup=inline.adminBack(),
         )
         await state.set_state(states.addProfit.user_id)
     elif call.data == "changereq":
@@ -373,6 +404,16 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         )
     elif "confirm_" in call.data:
         data = call.data.split("_")[1]
+        db_api.changeStatusToReturned(data)
+        payload = {"transID": data}
+        response = requests.post(f"{config.serverUrl}/send-message", json=payload)
+        if response.status_code == 200:
+            print("200")
+        else:
+            print("error", response)
+    elif "custErr_" in call.data:
+        data = call.data.split("_")[1]
+        db_api.changeStatusToErr(data)
         payload = {"transID": data}
         response = requests.post(f"{config.serverUrl}/send-message", json=payload)
         if response.status_code == 200:
@@ -385,7 +426,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             text=f"Лист пользователей:\n{data} ",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            reply_markup=inline.back(),
+            reply_markup=inline.adminBack(),
         )
     elif "ch_" in call.data:
         await state.update_data(value=call.data.split("_")[1])
@@ -393,7 +434,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             "Введите новый реквизит",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            reply_markup=inline.back(),
+            reply_markup=inline.adminBack(),
         )
         await state.set_state(states.changeReq.wallet)
     elif "banuser" in call.data:
@@ -405,7 +446,7 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
                 f"Пользователь {user_id} был отправлен в спам-лист",
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
-                reply_markup=inline.back(),
+                reply_markup=inline.adminBack(),
             )
         else:
             await bot.send_message(
@@ -420,6 +461,31 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
             message_id=call.message.message_id,
             reply_markup=inline.apanel(),
         )
+    elif "returnToManagementPanel" in call.data:
+        await state.clear()
+        await bot.edit_message_text(
+            f"<b>Панель Управления</b>",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=inline.managementPanel(),
+        )
+    elif "hideChat_" in call.data:
+        data = call.data.split("_")[1]
+        db_api.chatBan(data)
+        payload = {"id": data}
+        response = requests.post(f"{config.serverUrl}/hideChat", json=payload)
+    elif "promote_" in call.data:
+        userId = call.data.split("_")[1]
+        await bot.edit_message_text(  # $
+            f"Пользователь {user_id} был повышен до ",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=inline.adminBack(),
+        )
+        # if response.status_code == 200:
+        #    print("200")
+        # else:
+        #    print("error", response)
 
 
 if __name__ == "__main__":
