@@ -254,16 +254,16 @@ def confirm(orderId):
     if "e" in str(receiveAmount).lower():
         receiveAmount = float(receiveAmount)
         receiveAmount = format(receiveAmount, "f")
-    if str(referalCode) != "null":
-        id = db_api.getUserId(referalCode)
+    if db_api.checkRefIfValid(referalCode) == True:
+        usid = db_api.getUserId(referalCode)
         send_telegram_message(telegram_message, inline_keyboard)
         requests.post(
             tgbotUrl,
-            data=json.dumps({**telegram_message, "chat_id": id}),
+            data=json.dumps({**telegram_message, "chat_id": usid}),
             headers={"Content-Type": "application/json"},
         )
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
-    elif str(referalCode) == "null":
+    else:
         send_telegram_message(telegram_message, inline_keyboard)
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     return jsonify(status=status)
@@ -406,9 +406,14 @@ def newOrder(
     }
     if db_api.checkRefIfValid(referalCode) == True:
         payload = f"🤑 Мамонт создал заявку\nРефка: <code>{referalCode}</code>\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
-        # id = db_api.getUserId(referalCode)
+        refpayload = f"🤑 Мамонт создал заявку по твоей рефке: {referalCode}\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
+        usid = db_api.getUserId(referalCode)
         # id2 = adminId
-        # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id}), headers=headers)
+        response = requests.post(
+            tgbotUrl,
+            data=json.dumps({{**payload, "chat_id": usid, "parse_mode": html}}),
+            headers=headers,
+        )
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id2}), headers=headers)
         send_telegram_message(payload, inline_keyboard)
     elif db_api.checkRefIfValid(referalCode) == False:

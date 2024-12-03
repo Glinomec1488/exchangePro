@@ -191,6 +191,15 @@ def checkPriv(userId):
     return priv
 
 
+def showbanlist():
+    with sqlite3.connect("database.db", check_same_thread=False) as conn:
+        cursor = conn.cursor()
+    query = "SELECT * FROM banlist;"
+    cursor.execute(query)
+    table = cursor.fetchall()
+    return table
+
+
 # MESSAGE MANAGEMENT ---------------------------------------------------------------------------------------------------------------------------
 
 

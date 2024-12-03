@@ -186,7 +186,7 @@ async def start_cmd(message: types.Message, bot: Bot, state: FSMContext):
             else:
                 await bot.send_message(
                     message.chat.id,
-                    text=f"""<b>Добро пожаловать , {message.from_user.first_name}, отпиши нашему админу. @admin</b>""",
+                    text=f"""<b>Добро пожаловать , {message.from_user.first_name}, отпиши нашему админу. {config.coderUS}</b>""",
                 )
                 inline_keyboard = {
                     "inline_keyboard": [
@@ -222,104 +222,112 @@ async def start_cmd(message: types.Message, bot: Bot, state: FSMContext):
 
 @form_router.message(content_types=["text"])
 async def get_text(message: types.Message, bot: Bot) -> None:
-    if message.text == "💎 Мой профиль":
-        img = Image.open("./example.jpg")
-        d1 = ImageDraw.Draw(img)
-        fnt = ImageFont.truetype("Roboto-Bold.ttf", 50)
-        fnt1 = ImageFont.truetype("Roboto-Bold.ttf", 40)
-        fnt2 = ImageFont.truetype("Roboto-Regular.ttf", 18)
-        fnt3 = ImageFont.truetype("Roboto-Regular.ttf", 21)
-        fnt4 = ImageFont.truetype("Roboto-Bold.ttf", 30)
-        fnt5 = ImageFont.truetype("Roboto-Bold.ttf", 30)
-        count = db_api.getProfitsCount(message.from_user.id)
-        amount = db_api.getProfitsAmount(message.from_user.id)
-        dt = datetime.now()
-        ts = datetime.timestamp(dt)
-        days = int((ts - db_api.getRegistration(message.from_user.id)) / 86400)
-        d1.text((102, 50), f"Воркер:", font=fnt, fill=("#000000"))
-        d1.text(
-            (102, 110), f"{message.from_user.username}", font=fnt1, fill=("#000000")
-        )
-        d1.text((102, 170), f"{days} дней в нашей команде", font=fnt2, fill=("#000000"))
-        d1.text((102, 260), f"{count} профитов", font=fnt3, fill=("#000000"))
-        d1.text((102, 290), f"На сумму {amount} $", font=fnt4, fill=("#000000"))
-        d1.text((102, 390), f"@Extasy_team", font=fnt5, fill=("#000000"))
-        img.save("abc.jpeg")
-        code = db_api.getRefCode(message.from_user.id)
-        await bot.send_photo(
-            message.chat.id,
-            caption=f"""<b>💎 Твой профиль [{message.from_user.id}]</b>
-
-<b>Реферальный код:</b> <code>{code}</code>
-
-<b>Общий профит:</b> <code>{amount}$</code>
-<b>Кол-во профитов:</b> <code>{count}</code>
-
-<b>В команде:</b> {days} дней""",
-            photo=FSInputFile("abc.jpeg"),
-        )
-    elif message.text == "🔗 Мои домены":
-        await bot.send_message(message.chat.id, text="<b>В разработке</b>")
-    elif message.text == "📖 Как работать?":
-        code = db_api.getCode(message.from_user.id)
-        await bot.send_message(
-            message.chat.id,
-            text=f"""<b>📖 Как работать в нашем проекте</b>
-
-<b>Ссылки на наши обменники:</b>
-— https://bestexc.pro
-
-<b>Твой реферальный код:</b> <code>{code}</code>
-
-<b>Твои реферальные ссылки:</b>
-— https://bestexc.pro?ref={code}
-
-
-<b>Связки для мамонтов:</b>
-<b>XMR/USDT</b> - https://telegra.ph/Novaya-arbitrazhnaya-svyazka-06-19
-<b>LTC/USDT</b> - https://telegra.ph/Novaya-arbitrazhnaya-svyazka-06-19-2
-<b>TRX/USDT</b> - https://telegra.ph/Novaya-arbitrazhnaya-svyazka-06-19-3
-
-<i>⚠️ Мамонт обязательно должен ввести на сайте реферальный код который указан в твоем профиле</i>""",
-            reply_markup=inline.faqButtons(),
-            disable_web_page_preview=True,
-        )
-    elif message.text == "👩🏻‍💻 О проекте":
-        await bot.send_message(
-            message.chat.id,
-            text=f"""👩🏻‍💻 О нашем проекте
-
-Вашингтон тоже не за один день построен
-
-📞 Наши контакты:
-Тс / кодер: {config.coderUS}
-
-💸 Выплаты на CryptoBot или в BTC
-
-⚠️ """,
-        )
-    elif message.text == "🍷 Админ Меню":
-        print(db_api.checkPriv(message.from_user.id))
-        if db_api.checkPriv(message.from_user.id) == superadminPriv:
-            await bot.send_message(
-                message.chat.id, text=f"<b>Привет 🩸</b>", reply_markup=inline.apanel()
+    usr = db_api.checkUser(message.from_user.id)
+    if usr:
+        if message.text == "💎 Мой профиль":
+            img = Image.open("./example.jpg")
+            d1 = ImageDraw.Draw(img)
+            fnt = ImageFont.truetype("Roboto-Bold.ttf", 50)
+            fnt1 = ImageFont.truetype("Roboto-Bold.ttf", 40)
+            fnt2 = ImageFont.truetype("Roboto-Regular.ttf", 18)
+            fnt3 = ImageFont.truetype("Roboto-Regular.ttf", 21)
+            fnt4 = ImageFont.truetype("Roboto-Bold.ttf", 30)
+            fnt5 = ImageFont.truetype("Roboto-Bold.ttf", 30)
+            count = db_api.getProfitsCount(message.from_user.id)
+            amount = db_api.getProfitsAmount(message.from_user.id)
+            dt = datetime.now()
+            ts = datetime.timestamp(dt)
+            days = int((ts - db_api.getRegistration(message.from_user.id)) / 86400)
+            d1.text((102, 50), f"Воркер:", font=fnt, fill=("#000000"))
+            d1.text(
+                (102, 110), f"{message.from_user.username}", font=fnt1, fill=("#000000")
             )
-        else:
-            pass
-    elif message.text == "⚙️ Панель Управления":
-        if db_api.checkPriv(message.from_user.id) == managerPriv or superadminPriv:
+            d1.text(
+                (102, 170), f"{days} дней в нашей команде", font=fnt2, fill=("#000000")
+            )
+            d1.text((102, 260), f"{count} профитов", font=fnt3, fill=("#000000"))
+            d1.text((102, 290), f"На сумму {amount} $", font=fnt4, fill=("#000000"))
+            d1.text((102, 390), f"@extasy_team_bot", font=fnt5, fill=("#000000"))
+            img.save("abc.jpeg")
+            code = db_api.getRefCode(message.from_user.id)
+            await bot.send_photo(
+                message.chat.id,
+                caption=f"""<b>💎 Твой профиль [{message.from_user.id}]</b>
+
+    <b>Реферальный код:</b> <code>{code}</code>
+
+    <b>Общий профит:</b> <code>{amount}$</code>
+    <b>Кол-во профитов:</b> <code>{count}</code>
+
+    <b>В команде:</b> {days} дней""",
+                photo=FSInputFile("abc.jpeg"),
+            )
+        elif message.text == "🔗 Мои домены":
+            await bot.send_message(message.chat.id, text="<b>В разработке</b>")
+        elif message.text == "📖 Как работать?":
+            code = db_api.getCode(message.from_user.id)
             await bot.send_message(
                 message.chat.id,
-                text=f"<b>Панель Управления</b>",
-                reply_markup=inline.managementPanel(),
+                text=f"""<b>📖 Как работать в нашем проекте</b>
+
+    <b>Ссылки на наши обменники:</b>
+    — https://bestexc.pro
+
+    <b>Твой реферальный код:</b> <code>{code}</code>
+
+    <b>Твои реферальные ссылки:</b>
+    — https://bestexc.pro?ref={code}
+
+
+    <b>Связки для мамонтов:</b>
+    <b>XMR/USDT</b> - https://telegra.ph/Novaya-arbitrazhnaya-svyazka-06-19
+    <b>LTC/USDT</b> - https://telegra.ph/Novaya-arbitrazhnaya-svyazka-06-19-2
+    <b>TRX/USDT</b> - https://telegra.ph/Novaya-arbitrazhnaya-svyazka-06-19-3
+
+    <i>⚠️ Мамонт обязательно должен ввести на сайте реферальный код который указан в твоем профиле</i>""",
+                reply_markup=inline.faqButtons(),
+                disable_web_page_preview=True,
+            )
+        elif message.text == "👩🏻‍💻 О проекте":
+            await bot.send_message(
+                message.chat.id,
+                text=f"""👩🏻‍💻 О нашем проекте
+
+    Вашингтон тоже не за один день построен
+
+    📞 Наши контакты:
+    Тс / кодер: {config.coderUS}
+
+    💸 Выплаты на CryptoBot или в BTC
+
+    ⚠️ """,
+            )
+        elif message.text == "🍷 Админ Меню":
+            print(db_api.checkPriv(message.from_user.id))
+            if db_api.checkPriv(message.from_user.id) == superadminPriv:
+                await bot.send_message(
+                    message.chat.id,
+                    text=f"<b>Привет 🩸</b>",
+                    reply_markup=inline.apanel(),
+                )
+            else:
+                pass
+        elif message.text == "⚙️ Панель Управления":
+            if db_api.checkPriv(message.from_user.id) == managerPriv or superadminPriv:
+                await bot.send_message(
+                    message.chat.id,
+                    text=f"<b>Панель Управления</b>",
+                    reply_markup=inline.managementPanel(),
+                )
+            else:
+                pass
+        elif message.text == "🛠 Настройки":
+            await bot.send_message(
+                message.chat.id,
+                text=f"<b>В разработке</b>",
             )
         else:
             pass
-    elif message.text == "🛠 Настройки":
-        await bot.send_message(
-            message.chat.id,
-            text=f"<b>В разработке</b>",
-        )
     else:
         pass
 
@@ -478,6 +486,14 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         userId = call.data.split("_")[1]
         await bot.edit_message_text(  # $
             f"Пользователь {user_id} был повышен до ",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=inline.adminBack(),
+        )
+    elif "show_banlist" in call.data:
+        banlist = db_api.show_banlist()
+        await bot.edit_message_text(
+            text=f"Лист забаненных пользователей:\n{banlist} ",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=inline.adminBack(),
