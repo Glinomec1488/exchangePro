@@ -66,6 +66,7 @@ const CurrencyDropDown = ({ isTo, text }: IProps) => {
               key={currency.fullName}
               onClick={() => {
                 handleSelectCurrency(currency.shortName, currency.fullName);
+                toggleDropdown();
               }}
               className={`exchange__block-item exchange__block-item-send ${getActiveCurrencyStyle(
                 isTo,
@@ -74,10 +75,14 @@ const CurrencyDropDown = ({ isTo, text }: IProps) => {
                 toCurrency.fullName
               )}`}
             >
-              <img
-                src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}
-                alt=""
-              />
+              <div className="exchange__block-maslo">
+                <img
+                  className="exchange__block-logo"
+                  src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}
+                  alt=""
+                />
+                {currency.shortName}
+              </div>
             </div>
           ))}
       </div>

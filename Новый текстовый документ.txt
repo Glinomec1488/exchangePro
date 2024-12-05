@@ -1,2 +1,41 @@
 ProxyPass /api/ http://localhost:5000/
 ProxyPassReverse /api/ http://localhost:5000/
+
+
+ProxyRequests Off
+<Proxy *>
+    Order deny,allow
+    Allow from all
+</Proxy>
+
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteCond %{REQUEST_URI} ^/socket.io/ [NC]
+RewriteRule /(.*) ws://localhost:3000/$1 [P,L]
+
+ProxyPass "/socket.io/" "ws://domain.com/socket.io/"
+ProxyPassReverse "/socket.io/" "ws://domain.com/socket.io/"
+
+
+
+<VirtualHost *:443>
+  ServerName domain.com
+
+  SSLEngine on
+  SSLCertificateFile /path/to/your/certificate.crt
+  SSLCertificateKeyFile /path/to/your/private.key
+
+  ProxyRequests Off
+  <Proxy *>
+    Order deny,allow
+    Allow from all
+  </Proxy>
+
+  RewriteEngine On
+  RewriteCond %{HTTP:Upgrade} =websocket [NC]
+  RewriteCond %{REQUEST_URI} ^/socket.io/ [NC]
+  RewriteRule /(.*) ws://localhost:3000/$1 [P,L]
+
+  ProxyPass "/socket.io/" "http://localhost:3000/socket.io/"
+  ProxyPassReverse "/socket.io/" "http://localhost:3000/socket.io/"
+</VirtualHost>

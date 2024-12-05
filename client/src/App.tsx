@@ -3,15 +3,15 @@ import AppRouter from "./config/navigation";
 import { chechUserId, getCurrencies } from "./helpers";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { dispatchCurrencies } from "./store/slices/exchange";
-
+import { io } from "socket.io-client";
+import { serveUrl } from "./config";
 const App = () => {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const loadAppData = async () => {
-      chechUserId(); // Ensure this works correctly even if asynchronous
-
+      await chechUserId(); // Ensure this works correctly even if asynchronous
       try {
         const res = await getCurrencies();
         if (res) {
@@ -25,6 +25,14 @@ const App = () => {
     };
 
     loadAppData();
+    const socket = io(serveUrl);
+
+    socket.on(`rollchat_${localStorage.getItem("userId")}`, async () => {
+      try {
+      } catch (error: any) {
+        console.error(error.message);
+      }
+    });
   }, [dispatch]);
   return (
     <div className="wrapper">

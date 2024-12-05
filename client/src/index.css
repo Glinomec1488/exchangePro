@@ -1096,19 +1096,39 @@ input[type="number"]:focus {
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
 }
+.exchange__block-maslo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: #ffffff;
+  font-size: 18px;
+  padding: 4px;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+.exchange__block-logo {
+  margin-right: 10px;
+  width: 50px;
+  height: 50px;
+}
 
 .exchange__block-item {
-  margin: 0 10px 10px 0;
+  display: flex;
+  flex-direction: row;
   border-radius: 10px;
   border: 2px solid rgba(0, 0, 0, 0);
   cursor: pointer;
+  background-color: #161718;
+  margin: 4px;
+  font-family: "Inter", sans-serif;
   -webkit-transition: opacity 0.3s ease, border 0.3s ease;
   transition: opacity 0.3s ease, border 0.3s ease;
 }
 
-.exchange__block-item img {
+/*.exchange__block-item {
   margin-right: 5px;
-}
+}*/
 
 .exchange__block-item:hover {
   opacity: 0.6;

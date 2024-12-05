@@ -27,7 +27,7 @@ txJumpStart = [
 coinDB = [
     ("BITCOIN", "BTC", "BTC", "wallet3"),
     ("Ethereum", "ETH", "ETH", "wallet3"),
-    ("BINANCE SMART CHAIN", "LTC", "BNB", "wallet3"),
+    ("BINANCE SMART CHAIN", "BNB", "BNB", "wallet3"),
     ("BITCOIN CASH", "BCH", "BCH", "wallet3"),
     ("ZCASH", "ZEC", "ZEC", "wallet3"),
     ("FANTOM", "FTM", "FTM", "wallet3"),
@@ -130,6 +130,7 @@ def checkForBan(user_id):
     cond = cursor.execute(f"SELECT * FROM chat_users WHERE id = {user_id}").fetchone()[
         3
     ]
+    print(cond)
     cursor.close()
     return cond
 

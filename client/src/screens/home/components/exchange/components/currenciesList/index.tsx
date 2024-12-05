@@ -23,7 +23,7 @@ const CurrenciesList = ({ isTo }: IProps) => {
     <>
       {currencies
         ? currencies.map((currency) => (
-            <li
+            <div
               key={currency.fullName}
               className={`exchange__block-item exchange__block-item-send ${getActiveCurrencyStyle(
                 isTo,
@@ -35,11 +35,15 @@ const CurrenciesList = ({ isTo }: IProps) => {
                 handleSelectCurrency(currency.shortName, currency.fullName);
               }}
             >
-              <img
-                src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}
-                alt=""
-              />
-            </li>
+              <div className="exchange__block-maslo">
+                <img
+                  className="exchange__block-logo"
+                  src={require(`../../../../../../static/${currency.imageUrlP}.svg`)} //{`${getEnv(process.env.REACT_APP_SERVER_URL,"REACT_APP_SERVER_URL")}/static/${currency.imageUrlP}.svg`}
+                  alt=""
+                />
+                {currency.shortName}
+              </div>
+            </div>
           ))
         : ""}
     </>

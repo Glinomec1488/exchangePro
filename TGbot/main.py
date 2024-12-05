@@ -340,6 +340,8 @@ async def ans(call: CallbackQuery, bot: Bot, state: FSMContext) -> None:
         id = call.data.split("_")[1]
         await state.update_data(userId=id)
         await bot.send_message(call.message.chat.id, text="Введите текст")
+        payload = {"userId": id}
+        response = requests.post(f"{config.serverUrl}/rollchat", json=payload)
         await state.set_state(states.Answer.text)
     elif "rmchat" in call.data:
         id = call.data.split("_")[1]

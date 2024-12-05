@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { serveUrl } from "../../../../../../../config";
 import { useAppSelector } from "../../../../../../../store/hooks";
 import { setIsLoaded } from "..";
@@ -47,7 +47,7 @@ const useExchangeRate = () => {
   const noNetShrtFrom = filterShortName(toCurrency.shortName);
   const [minAmount, setMinAmount] = useState(1);
   const [maxAmount, setMaxAmount] = useState(1);
-
+  const abortControllerRef = useRef<AbortController | null>(null);
   const getExchangeRate = async (
     toCurrencyAmount: string,
     fromCurrencyAmount: string,
@@ -55,6 +55,12 @@ const useExchangeRate = () => {
   ) => {
     if (!isChangeInput || !toCurrency.shortName || !fromCurrency.shortName)
       return;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // Create a new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     const isChange = isChangeReceiveAmount ? "True" : "false";
     setIsLoaded(false);
     try {
@@ -64,6 +70,7 @@ const useExchangeRate = () => {
         }/${toCurrencyAmount || "0.01"}/${isChange}`,
         {
           method: "POST",
+          signal: abortController.signal,
         }
       ).then((res) => res.json());
 
@@ -74,10 +81,14 @@ const useExchangeRate = () => {
       //}
       setIsChangeInput(false);
     } catch (error) {
-      console.error("Error fetching data:", error);
-      // Optionally handle any errors if needed
+      if ((error as DOMException).name === "AbortError") {
+        console.log("Fetch request was aborted");
+      } else {
+        console.error("Error fetching exchange rate:", error);
+      }
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   };
 
   const getFromCurrencyRange = (currency: string) => {
