@@ -82,7 +82,6 @@ const useExchangeRate = () => {
       setIsChangeInput(false);
     } catch (error) {
       if ((error as DOMException).name === "AbortError") {
-        console.log("Fetch request was aborted");
       } else {
         console.error("Error fetching exchange rate:", error);
       }

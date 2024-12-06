@@ -29,6 +29,7 @@ const App = () => {
 
     socket.on(`rollchat_${localStorage.getItem("userId")}`, async () => {
       try {
+        //console.log("lilnigga");
       } catch (error: any) {
         console.error(error.message);
       }
